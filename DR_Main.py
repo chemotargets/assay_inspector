@@ -86,7 +86,7 @@ class DataReporting():
 
         # Load data
         if not os.path.exists(self.data_path):
-            writeToLog(logLevel="error", oriMessage= f"The file {self.data_path} does not exist", toFile=False)
+            logging.error(f"The file {self.data_path} does not exist")
             return 
         data_instance = MoleculeData(source=self.data_path)
 
@@ -96,7 +96,7 @@ class DataReporting():
         if self.reference_set is not None:
             # Load reference set data
             if not os.path.exists(self.reference_set):
-                writeToLog(logLevel="error", oriMessage= f"The file {self.reference_set} does not exist", toFile=False)
+                logging.error(f"The file {self.reference_set} does not exist")
                 return 
             ref_instance = MoleculeData(source=self.reference_set)
 
@@ -107,11 +107,11 @@ class DataReporting():
         if self.task == config["TASK_CLASSIFICATION"]:
             endpoint_classes = data[config["NAMES"]["VALUE"]].unique()
             if len(endpoint_classes) != 2: 
-                writeToLog(logLevel="error", oriMessage= f"The number of endpoint classes is {len(endpoint_classes)} ({', '.join(endpoint_classes)}), but 2 were expected", toFile=False)
+                logging.error(f"The number of endpoint classes is {len(endpoint_classes)} ({', '.join(endpoint_classes)}), but 2 were expected")
 
         elif self.task == config["TASK_REGRESSION"]:
             if not pd.api.types.is_numeric_dtype(data[config["NAMES"]["VALUE"]]):
-                writeToLog(logLevel="error", oriMessage= f"The data type of the endpoint value is not numeric but {data[config["NAMES"]["VALUE"]].dtype}", toFile=False)
+                logging.error(f"The data type of the endpoint value is not numeric but {data[config['NAMES']['VALUE']].dtype}")
 
         # Count the number of molecules
         n_mols = self.__getNmols(data)
@@ -139,7 +139,7 @@ class DataReporting():
             os.makedirs(os.path.join(self.directory, self.endpoint_name))
 
         # Generate the final DataFrame and save it into a TSV file
-        writeToLog(logLevel="info", oriMessage= f"Creating report on {self.endpoint_name} individual dataset", toFile=True)
+        logging.info(oriMessage= f"Creating report on {self.endpoint_name} individual dataset")
 
         if self.task == config["TASK_CLASSIFICATION"]:
             summary_df = pd.DataFrame(data=[[self.endpoint_name , 'entire_dataset'] + n_mols + statistics],
@@ -173,7 +173,7 @@ class DataReporting():
         self.__plotFeatureSpace_coloredbyEndpoint(projection, data)
         self.__plotFeatureSpace_Hexbin(projection)    
 
-        writeToLog(logLevel="info", oriMessage= f"The final report and several plots have been saved in the {self.directory+'/'+self.endpoint_name} directory", toFile=True)
+        logging.info(oriMessage= f"The final report and several plots have been saved in the {self.directory+'/'+self.endpoint_name} directory")
 
     ### 
     def get_comparative_reporting(self):
@@ -190,7 +190,7 @@ class DataReporting():
 
         # Load data
         if not os.path.exists(self.data_path):
-            writeToLog(logLevel="error", oriMessage= f"The file {self.data_path} does not exist", toFile=False)
+            logging.error(f"The file {self.data_path} does not exist")
             return 
         data_instance = MoleculeData(source=self.data_path)
 
@@ -200,7 +200,7 @@ class DataReporting():
         if self.reference_set is not None:
             # Load reference set data
             if not os.path.exists(self.reference_set):
-                writeToLog(logLevel="error", oriMessage= f"The file {self.reference_set} does not exist", toFile=False)
+                logging.error(f"The file {self.reference_set} does not exist")
                 return 
             ref_instance = MoleculeData(source=self.reference_set)
 
@@ -211,11 +211,11 @@ class DataReporting():
         if self.task == config["TASK_CLASSIFICATION"]:
             endpoint_classes = data[config["NAMES"]["VALUE"]].unique()
             if len(endpoint_classes) != 2:
-                writeToLog(logLevel="error", oriMessage= f"The number of endpoint classes is {len(endpoint_classes)} ({', '.join(endpoint_classes)}), but 2 were expected", toFile=False)
+                logging.error(f"The number of endpoint classes is {len(endpoint_classes)} ({', '.join(endpoint_classes)}), but 2 were expected")
 
         elif self.task == config["TASK_REGRESSION"]:
             if not pd.api.types.is_numeric_dtype(data[config["NAMES"]["VALUE"]]):
-                writeToLog(logLevel="error", oriMessage= f"The data type of the endpoint value is not numeric but {data[config["NAMES"]["VALUE"]].dtype}", toFile=False)
+                logging.error(f"The data type of the endpoint value is not numeric but {data[config['NAMES']['VALUE']].dtype}")
 
         # Get the list of sources and sort them by counts
         sources_list = data[config["NAMES"]["REF"]].unique().tolist()
@@ -224,7 +224,7 @@ class DataReporting():
 
         # Verify the presence of multiple data sources
         if len(self.sources_list) == 1:
-            writeToLog(logLevel="error", oriMessage= "Expected multiple data sources, but only one was provided. Use the `.get_individual_reporting()` method instead.", toFile=False)
+            logging.error(f"Expected multiple data sources, but only one was provided. Use the `.get_individual_reporting()` method instead.")
             return
 
         # Count the total number of molecules
@@ -286,7 +286,7 @@ class DataReporting():
             os.makedirs(os.path.join(self.directory, self.endpoint_name))
 
         # Generate the final DataFrame and save it into a TSV file
-        writeToLog(logLevel="info", oriMessage= f"Creating comparative report on {self.endpoint_name} aggregated dataset", toFile=True)
+        logging.info(f"Creating comparative report on {self.endpoint_name} aggregated dataset")
 
         summary_df = self.__getSummaryDataFrame(n_mols_total, n_mols_sources, statistics_entire_dataset, statistics_sources, prop_ref_mols_total, prop_ref_mols_sources, 
                                                 skewness_entire_dataset, skewness_sources, kurtosis_entire_dataset, kurtosis_sources, outliers_info_entire_dataset, 
@@ -333,7 +333,7 @@ class DataReporting():
         self.__generateExpertAssessment(data, skewness_sources, outliers_info_sources, oor_sources, feature_similarity_results, 
                                         endpoint_distribution_results, discrepancies_df, prop_ref_mols_sources)
 
-        writeToLog(logLevel="info", oriMessage= f"The final report and several plots have been saved in the {os.path.join(self.directory, self.endpoint_name)} directory", toFile=True)
+        logging.info(f"The final report and several plots have been saved in the {os.path.join(self.directory, self.endpoint_name)} directory")
 
         self.__generateOutputSummary(summary_df)
 

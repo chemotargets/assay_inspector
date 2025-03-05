@@ -30,6 +30,8 @@ import seaborn as sns
 from matplotlib_venn import venn2, venn3
 from upsetplot import UpSet, from_contents
 
+from DR_Utils import logging
+
 import json
 
 ### Configs
@@ -710,7 +712,7 @@ def __plotDatasetsIntersection(self, data_df):
                 upset = UpSet(upset_data, min_subset_size=data_df.shape[0]*0.01, subset_size='count', # only show subsets with at least 1% of the total data points
                               sort_by='cardinality', show_counts="{:,}", facecolor=self.hex_colors[0], element_size=40) 
             except:
-                writeToLog(logLevel="warning", oriMessage="The UpSet plot has not been generated because no subset contains at least 1% of the total data points.", writeToLog=True)
+                logging.warning(oriMessage="The UpSet plot has not been generated because no subset contains at least 1% of the total data points.")
                 return
         
         plot = upset.plot(fig=plt.figure(figsize=(8, 8)))

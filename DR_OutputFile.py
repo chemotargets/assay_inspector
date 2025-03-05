@@ -14,7 +14,7 @@ __deprecated__ = False
 import pandas as pd
 import os
 
-from DR_Utils import classify_skewness
+from DR_Utils import logging, classify_skewness
 
 import json
 
@@ -141,4 +141,4 @@ def __generateOutputSummary(self, results_df):
 
         output_summary = description + n_mols + class_counts + class_ratio
 
-    writeToLog('info', oriMessage=f'{output_summary}', toFile=True)
+    logging.info(oriMessage=f'{output_summary}')
