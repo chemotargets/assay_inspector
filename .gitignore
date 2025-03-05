@@ -1,1 +1,3 @@
 test_scripts/data_testing
+__pycache__
+tmp
