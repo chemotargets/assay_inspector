@@ -16,6 +16,12 @@ import os
 
 from DR_Utils import classify_skewness
 
+import json
+
+### Configs
+with open("configs.json", "r") as file:
+    config = json.load(file)
+
 ### 
 def __getSummaryDataFrame(self, n_mols_total, n_mols_sources_df, statistics_entire_dataset, statistics_sources_df, 
                           prop_ref_mols_total, prop_ref_mols_sources_df, skewness_total, skewness_sources_df, 
@@ -40,7 +46,7 @@ def __getSummaryDataFrame(self, n_mols_total, n_mols_sources_df, statistics_enti
             pass
 
         # Concatenate the 'skewness', 'kurtosis', 'outliers' and 'oor' dataframes (only for regression endpoints) 
-        if item in ['skewness', 'kurtosis', 'outliers', 'oor'] and self.task == CONF_TASK_CLASSIFICATION:
+        if item in ['skewness', 'kurtosis', 'outliers', 'oor'] and self.task == config["TASK_CLASSIFICATION"]:
             pass
 
         else:
@@ -61,16 +67,16 @@ def __getSummaryDataFrame(self, n_mols_total, n_mols_sources_df, statistics_enti
             summary_df = pd.merge(summary_df, concat_dfs[i], on='dataset', how='left')
 
     # Remove specific columns
-    if self.task == CONF_TASK_REGRESSION and self.upper_bound is None:
+    if self.task == config["TASK_REGRESSION"] and self.upper_bound is None:
         summary_df = summary_df.drop(columns=['n_upper_oor'])
-    if self.task == CONF_TASK_REGRESSION and self.lower_bound is None:
+    if self.task == config["TASK_REGRESSION"] and self.lower_bound is None:
         summary_df = summary_df.drop(columns=['n_lower_oor'])
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         summary_df = summary_df.drop(columns=['meandiff'])
 
     # Apply last changes
-    summary_df[CONFIGS.NAMES.ENDPOINT_ID] = self.endpoint_name # add endpoint column
-    summary_df = summary_df[[CONFIGS.NAMES.ENDPOINT_ID] + [col for col in summary_df if col != CONFIGS.NAMES.ENDPOINT_ID]] # reorder columns
+    summary_df[config["NAMES"]["ENDPOINT_ID"]] = self.endpoint_name # add endpoint column
+    summary_df = summary_df[[config["NAMES"]["ENDPOINT_ID"]] + [col for col in summary_df if col != config["NAMES"]["ENDPOINT_ID"]]] # reorder columns
     summary_df['dataset'] = pd.Categorical(summary_df['dataset'], categories=['entire_dataset'] + self.sources_list, ordered=True) # reorder rows
     summary_df = summary_df.sort_values('dataset').reset_index()
 
@@ -112,7 +118,7 @@ def __generateOutputSummary(self, results_df):
 
     # Retrieve endpoint statistics and Create the final summary report
     description = f'\n### SUMMARY REPORT ###\nResulting {self.endpoint_name} dataset if all individual data sources were merged:\n'
-    if self.task == CONF_TASK_REGRESSION:
+    if self.task == config["TASK_REGRESSION"]:
         # Classify the skewness of the entire dataset
         data['skewness_category'] = data['skewness_value'].apply(classify_skewness)
 
@@ -129,7 +135,7 @@ def __generateOutputSummary(self, results_df):
 
         output_summary = description + n_mols + mean_std + range_iqr + n_outliers + skewness + n_upper_oor + n_lower_oor
 
-    elif self.task == CONF_TASK_CLASSIFICATION:
+    elif self.task == config["TASK_CLASSIFICATION"]:
         class_counts = f'\tClass counts: {data["class_counts"].iloc[0]}\n'
         class_ratio = f'\tClass ratio: {data["class_ratio"].iloc[0]}\n'
 

@@ -30,6 +30,12 @@ import seaborn as sns
 from matplotlib_venn import venn2, venn3
 from upsetplot import UpSet, from_contents
 
+import json
+
+### Configs
+with open("configs.json", "r") as file:
+    config = json.load(file)
+
 ###
 def __getAxisRanges(self, proj, expand_factor=0.1):
 
@@ -58,12 +64,12 @@ def __VisualizeOutliers(self, data_df, outliers_set):
     """
 
     # Sort data by value
-    data_df = data_df.sort_values(by=CONFIGS.NAMES.VALUE)
+    data_df = data_df.sort_values(by=config["NAMES"]["VALUE"])
     # Flag molecules as outliers or non-outliers
     colors = data_df['inchikey'].apply(lambda x: 'red' if x in outliers_set else 'black')
 
     # Create the figure
-    fig = go.Figure(data=[go.Scatter(y=data_df[CONFIGS.NAMES.VALUE], mode='markers', marker=dict(color=colors))])
+    fig = go.Figure(data=[go.Scatter(y=data_df[config["NAMES"]["VALUE"]], mode='markers', marker=dict(color=colors))])
     fig.update_layout(
         title={'text':f'[1] Visualization of {self.endpoint_name} Outliers', 'x':0.5, 'xanchor':'center', 'font':{'size':24}},
         yaxis_title={'text':f'{self.endpoint_name} value', 'font':{'size':16}},
@@ -84,14 +90,14 @@ def __plotEndpointDistribution(self, data_df, outliers_set):
 
     # Define y-axis range (only for regression endpoints)
     yaxis_range = [self.lower_bound, self.upper_bound]
-    if (self.lower_bound is not None) and (data_df[CONFIGS.NAMES.VALUE].min() < self.lower_bound):
-        yaxis_range[0] = data_df[CONFIGS.NAMES.VALUE].min()
-    if (self.upper_bound is not None) and (data_df[CONFIGS.NAMES.VALUE].max() > self.upper_bound):
-        yaxis_range[1] = data_df[CONFIGS.NAMES.VALUE].max()
+    if (self.lower_bound is not None) and (data_df[config["NAMES"]["VALUE"]].min() < self.lower_bound):
+        yaxis_range[0] = data_df[config["NAMES"]["VALUE"]].min()
+    if (self.upper_bound is not None) and (data_df[config["NAMES"]["VALUE"]].max() > self.upper_bound):
+        yaxis_range[1] = data_df[config["NAMES"]["VALUE"]].max()
 
     # Bar chart for classification endpoints
-    if self.task == CONF_TASK_CLASSIFICATION:
-        value_counts = data_df[CONFIGS.NAMES.VALUE].value_counts().sort_index(ascending=True)
+    if self.task == config["TASK_CLASSIFICATION"]:
+        value_counts = data_df[config["NAMES"]["VALUE"]].value_counts().sort_index(ascending=True)
 
         # Create the figure
         fig = go.Figure(data=[go.Bar(x=value_counts.index, y=value_counts.values,
@@ -110,10 +116,10 @@ def __plotEndpointDistribution(self, data_df, outliers_set):
         pio.write_image(fig, os.path.join(self.directory, self.endpoint_name, '2_endpoint_distribution_visualization.svg'), format='svg')
 
     # Histogram and Violin plot for regression endpoints
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
 
         # Create the histogram
-        fig = go.Figure(data=[go.Histogram(x=data_df[CONFIGS.NAMES.VALUE], marker_color=self.hex_colors[0])])
+        fig = go.Figure(data=[go.Histogram(x=data_df[config["NAMES"]["VALUE"]], marker_color=self.hex_colors[0])])
         fig.update_layout(
             title={'text':f'[2.1] Distribution of {self.endpoint_name} Values', 'x':0.5, 'xanchor':'center', 'font':{'size':24}},
             xaxis_title={'text':f'{self.endpoint_name}', 'font':{'size':16}},
@@ -126,7 +132,7 @@ def __plotEndpointDistribution(self, data_df, outliers_set):
         pio.write_image(fig, os.path.join(self.directory, self.endpoint_name, '2_1_endpoint_distribution_visualization_histogram.svg'), format='svg')
 
         # Create the violin plot
-        fig = go.Figure(data=[go.Violin(y=data_df[CONFIGS.NAMES.VALUE], box_visible=True, line_color='black', x0=' ',
+        fig = go.Figure(data=[go.Violin(y=data_df[config["NAMES"]["VALUE"]], box_visible=True, line_color='black', x0=' ',
                                         meanline_visible=True, meanline={'color':'red'}, 
                                         spanmode='manual', span=[self.lower_bound, self.upper_bound])])
         fig.update_layout(
@@ -142,16 +148,16 @@ def __plotEndpointDistribution(self, data_df, outliers_set):
 
     # Additional plot to visualize endpoint distribution when including or excluding
     # outliers (only for regression endpoints)
-    if self.task == CONF_TASK_REGRESSION:
+    if self.task == config["TASK_REGRESSION"]:
         # Get endpoint distribution excluding outliers
-        data_without_outliers = data_df.loc[~data_df[CONFIGS.NAMES.INCHIKEY].isin(outliers_set)]
+        data_without_outliers = data_df.loc[~data_df[config["NAMES"]["INCHIKEY"]].isin(outliers_set)]
 
         # Create the figure
-        with_outliers = go.Violin(y=data_df[CONFIGS.NAMES.VALUE], name='Outliers included', legendgroup='Outliers included', 
+        with_outliers = go.Violin(y=data_df[config["NAMES"]["VALUE"]], name='Outliers included', legendgroup='Outliers included', 
                                   side='negative', line_color=self.hex_colors[0], x0=' ', meanline_visible=True, showlegend=True,
                                   spanmode='manual', span=[self.lower_bound, self.upper_bound], 
                                   marker=dict(outliercolor=self.hex_colors[0]))
-        without_outliers = go.Violin(y=data_without_outliers[CONFIGS.NAMES.VALUE], name='Outliers excluded', legendgroup='Outliers excluded', 
+        without_outliers = go.Violin(y=data_without_outliers[config["NAMES"]["VALUE"]], name='Outliers excluded', legendgroup='Outliers excluded', 
                                      side='positive', line_color=self.hex_colors[1], x0=' ', meanline_visible=True, showlegend=True,
                                      spanmode='manual', span=[self.lower_bound, self.upper_bound],
                                      marker=dict(outliercolor=self.hex_colors[1], symbol='x', opacity=0.7))
@@ -178,15 +184,15 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
 
     # Define y-axis range (only for regression endpoints)
     yaxis_range = [self.lower_bound, self.upper_bound]
-    if (self.lower_bound is not None) and (data_df[CONFIGS.NAMES.VALUE].min() < self.lower_bound):
-        yaxis_range[0] = data_df[CONFIGS.NAMES.VALUE].min()
-    if (self.upper_bound is not None) and (data_df[CONFIGS.NAMES.VALUE].max() > self.upper_bound):
-        yaxis_range[1] = data_df[CONFIGS.NAMES.VALUE].max()
+    if (self.lower_bound is not None) and (data_df[config["NAMES"]["VALUE"]].min() < self.lower_bound):
+        yaxis_range[0] = data_df[config["NAMES"]["VALUE"]].min()
+    if (self.upper_bound is not None) and (data_df[config["NAMES"]["VALUE"]].max() > self.upper_bound):
+        yaxis_range[1] = data_df[config["NAMES"]["VALUE"]].max()
 
     # Stacked Bar charts for classification endpoints
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         # Calculate class counts and percentages for each source 
-        source_class_counts = {ref: data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref].value_counts(ascending=True).sort_index() for ref in self.sources_list}
+        source_class_counts = {ref: data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref].value_counts(ascending=True).sort_index() for ref in self.sources_list}
         source_class_percentages = {ref: (counts / counts.sum()) * 100 for ref, counts in source_class_counts.items()}
 
         # Define figure data
@@ -196,7 +202,7 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
 
         for i, ref in enumerate(self.sources_list):
             # Get source data
-            n_mols = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref].shape[0]
+            n_mols = data_df.loc[data_df[config["NAMES"]["REF"]] == ref].shape[0]
             counts = source_class_counts[ref].sort_index(ascending=True)
             percentages = source_class_percentages[ref].sort_index(ascending=True)
             # Number-of-Molecules Bar Chart
@@ -241,13 +247,13 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
         pio.write_image(fig, os.path.join(self.directory, self.endpoint_name, '3_endpoint_distribution_comparative_visualization.svg'), format='svg')
 
     # Overlaid Histogram and Multiple Violin plots for regression endpoints
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
 
         # Create the histogram
         fig = go.Figure()
         for i, ref in enumerate(self.sources_list):
-            source_data = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref]
-            fig.add_trace(go.Histogram(x=source_data[CONFIGS.NAMES.VALUE], name=ref, opacity=0.5, marker_color=self.hex_colors[i % len(self.hex_colors)]))
+            source_data = data_df.loc[data_df[config["NAMES"]["REF"]] == ref]
+            fig.add_trace(go.Histogram(x=source_data[config["NAMES"]["VALUE"]], name=ref, opacity=0.5, marker_color=self.hex_colors[i % len(self.hex_colors)]))
         fig.update_layout(
             barmode='overlay',
             title={'text':f'[3.1] Distribution of {self.endpoint_name} Values Across Data Sources', 'x':0.5, 'xanchor':'center', 'font':{'size':24}},
@@ -262,7 +268,7 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
         pio.write_image(fig, os.path.join(self.directory, self.endpoint_name, '3_1_endpoint_distribution_comparative_visualization_histogram.svg'), format='svg')
 
         # Get the set of unique molecules from the entire dataset
-        unique_mols = set(data_df[CONFIGS.NAMES.INCHIKEY].tolist())
+        unique_mols = set(data_df[config["NAMES"]["INCHIKEY"]].tolist())
         
         # Define figure data
         bars_nmols = []
@@ -271,9 +277,9 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
 
         for ref in self.sources_list:
             # Get source data
-            source_data = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref]
+            source_data = data_df.loc[data_df[config["NAMES"]["REF"]] == ref]
             n_mols = source_data.shape[0]
-            prop_unique_mols = (len(unique_mols.intersection(set(source_data[CONFIGS.NAMES.INCHIKEY].tolist()))) / len(unique_mols)) * 100
+            prop_unique_mols = (len(unique_mols.intersection(set(source_data[config["NAMES"]["INCHIKEY"]].tolist()))) / len(unique_mols)) * 100
             # Number-of-Molecules Bar Chart
             bars_nmols.append(go.Bar(name=ref, x=[ref], y=[n_mols], marker_color=self.hex_colors[0], showlegend=False, opacity=0.7,
                                      text=f"{n_mols}", textposition='outside')) 
@@ -281,7 +287,7 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
             bars_uniquemols.append(go.Bar(name=ref, x=[ref], y=[prop_unique_mols], marker_color=self.hex_colors[1], showlegend=False, opacity=0.7,
                                           text=f"{prop_unique_mols}", texttemplate='%{text:.2f}', textposition='outside'))
             # Violin Plot
-            violins.append(go.Violin(y=source_data[CONFIGS.NAMES.VALUE], name=ref, box_visible=True, line_color='black',
+            violins.append(go.Violin(y=source_data[config["NAMES"]["VALUE"]], name=ref, box_visible=True, line_color='black',
                                      meanline_visible=True, meanline={'color':'red'}, showlegend=False,
                                      spanmode='manual', span=[self.lower_bound, self.upper_bound])) 
 
@@ -314,7 +320,7 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
 
     # Additional plot to visualize endpoint distribution across datasets when including or 
     # excluding outliers (only for regression endpoints)
-    if self.task == CONF_TASK_REGRESSION:
+    if self.task == config["TASK_REGRESSION"]:
         
         # Create the figure
         violins = []
@@ -325,14 +331,14 @@ def __plotEndpointDistributionComparison(self, data_df, outliers_dict):
 
         for ref in self.sources_list:
             # Select source data including and excluding outliers
-            source_data = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref]
-            source_data_no_outliers = source_data.loc[~source_data[CONFIGS.NAMES.INCHIKEY].isin(outliers_dict[ref])]
+            source_data = data_df.loc[data_df[config["NAMES"]["REF"]] == ref]
+            source_data_no_outliers = source_data.loc[~source_data[config["NAMES"]["INCHIKEY"]].isin(outliers_dict[ref])]
             # Append Violin Plot traces for both endpoint distributions
-            violins.append(go.Violin(y=source_data[CONFIGS.NAMES.VALUE], name=ref, legendgroup='Outliers included', 
+            violins.append(go.Violin(y=source_data[config["NAMES"]["VALUE"]], name=ref, legendgroup='Outliers included', 
                                      side='negative', line_color=self.hex_colors[0], meanline_visible=True, showlegend=False,
                                      spanmode='manual', span=[self.lower_bound, self.upper_bound],
                                      marker=dict(outliercolor=self.hex_colors[0])))
-            violins.append(go.Violin(y=source_data_no_outliers[CONFIGS.NAMES.VALUE], name=ref,  legendgroup='Outliers excluded', 
+            violins.append(go.Violin(y=source_data_no_outliers[config["NAMES"]["VALUE"]], name=ref,  legendgroup='Outliers excluded', 
                                      side='positive', line_color=self.hex_colors[1], meanline_visible=True, showlegend=False,
                                      spanmode='manual', span=[self.lower_bound, self.upper_bound],
                                      marker=dict(outliercolor=self.hex_colors[1], symbol='x', opacity=0.7)))
@@ -363,18 +369,18 @@ def __plotEndpointDistributionComparison_RefVsNonRefMols(self, data_df, ref_set)
 
     # Define y-axis range (only for regression endpoints)
     yaxis_range = [self.lower_bound, self.upper_bound]
-    if (self.lower_bound is not None) and (data_df[CONFIGS.NAMES.VALUE].min() < self.lower_bound):
-        yaxis_range[0] = data_df[CONFIGS.NAMES.VALUE].min()
-    if (self.upper_bound is not None) and (data_df[CONFIGS.NAMES.VALUE].max() > self.upper_bound):
-        yaxis_range[1] = data_df[CONFIGS.NAMES.VALUE].max()
+    if (self.lower_bound is not None) and (data_df[config["NAMES"]["VALUE"]].min() < self.lower_bound):
+        yaxis_range[0] = data_df[config["NAMES"]["VALUE"]].min()
+    if (self.upper_bound is not None) and (data_df[config["NAMES"]["VALUE"]].max() > self.upper_bound):
+        yaxis_range[1] = data_df[config["NAMES"]["VALUE"]].max()
 
     # Grouped and Stacked Bar charts for classification endpoints
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
 
         # Calculate class counts and percentages for each source 
-        endpoint_classes = sorted(data_df[CONFIGS.NAMES.VALUE].unique().tolist())
-        source_class_counts_ref = {ref: data_df[CONFIGS.NAMES.VALUE].loc[(data_df[CONFIGS.NAMES.REF] == ref) & (data_df[CONFIGS.NAMES.INCHIKEY].isin(ref_set))].value_counts().reindex(endpoint_classes, fill_value=0).sort_index(ascending=True) for ref in self.sources_list}
-        source_class_counts_nonref = {ref: data_df[CONFIGS.NAMES.VALUE].loc[(data_df[CONFIGS.NAMES.REF] == ref) & (~data_df[CONFIGS.NAMES.INCHIKEY].isin(ref_set))].value_counts().reindex(endpoint_classes, fill_value=0).sort_index(ascending=True) for ref in self.sources_list}
+        endpoint_classes = sorted(data_df[config["NAMES"]["VALUE"]].unique().tolist())
+        source_class_counts_ref = {ref: data_df[config["NAMES"]["VALUE"]].loc[(data_df[config["NAMES"]["REF"]] == ref) & (data_df[config["NAMES"]["INCHIKEY"]].isin(ref_set))].value_counts().reindex(endpoint_classes, fill_value=0).sort_index(ascending=True) for ref in self.sources_list}
+        source_class_counts_nonref = {ref: data_df[config["NAMES"]["VALUE"]].loc[(data_df[config["NAMES"]["REF"]] == ref) & (~data_df[config["NAMES"]["INCHIKEY"]].isin(ref_set))].value_counts().reindex(endpoint_classes, fill_value=0).sort_index(ascending=True) for ref in self.sources_list}
         source_class_percentages_ref = {ref: (counts / counts.sum()) * 100 for ref, counts in source_class_counts_ref.items()}
         source_class_percentages_nonref = {ref: (counts / counts.sum()) * 100 for ref, counts in source_class_counts_nonref.items()}
 
@@ -385,10 +391,10 @@ def __plotEndpointDistributionComparison_RefVsNonRefMols(self, data_df, ref_set)
 
         for i, ref in enumerate(self.sources_list):
             # Get source data
-            source_data = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref]
+            source_data = data_df.loc[data_df[config["NAMES"]["REF"]] == ref]
 
             n_mols = source_data.shape[0]
-            prop_ref_mols = (len(ref_set.intersection(set(source_data[CONFIGS.NAMES.INCHIKEY].tolist()))) / len(set(source_data[CONFIGS.NAMES.INCHIKEY].tolist()))) * 100
+            prop_ref_mols = (len(ref_set.intersection(set(source_data[config["NAMES"]["INCHIKEY"]].tolist()))) / len(set(source_data[config["NAMES"]["INCHIKEY"]].tolist()))) * 100
             prop_nonref_mols = 100 - prop_ref_mols
 
             percentages_ref_mols = source_class_percentages_ref[ref].sort_index(ascending=True)
@@ -457,7 +463,7 @@ def __plotEndpointDistributionComparison_RefVsNonRefMols(self, data_df, ref_set)
         )
 
     # Mutliple Split Violin plots for regression endpoints
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         
         # Define figure data
         bars_nmols = []
@@ -470,10 +476,10 @@ def __plotEndpointDistributionComparison_RefVsNonRefMols(self, data_df, ref_set)
 
         for ref in self.sources_list:
             # Get source data
-            source_data = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref]
+            source_data = data_df.loc[data_df[config["NAMES"]["REF"]] == ref]
             # Calculate statistics
             n_mols = source_data.shape[0]
-            prop_ref_mols = (len(ref_set.intersection(set(source_data[CONFIGS.NAMES.INCHIKEY].tolist()))) / len(set(source_data[CONFIGS.NAMES.INCHIKEY].tolist()))) * 100
+            prop_ref_mols = (len(ref_set.intersection(set(source_data[config["NAMES"]["INCHIKEY"]].tolist()))) / len(set(source_data[config["NAMES"]["INCHIKEY"]].tolist()))) * 100
             prop_nonref_mols = 100 - prop_ref_mols
             # Number-of-Molecules Bar Chart
             bars_nmols.append(go.Bar(name=ref, x=[ref], y=[n_mols], marker_color=self.hex_colors[0], showlegend=False, opacity=0.7,
@@ -483,16 +489,16 @@ def __plotEndpointDistributionComparison_RefVsNonRefMols(self, data_df, ref_set)
             bars_refmols.append(go.Bar(name='Non-reference molecules', x=[ref], y=[prop_nonref_mols], marker_color=self.hex_colors[2], showlegend=False, opacity=0.7))
             
             # Select source data for reference and non-reference molecules
-            source_data_ref_mols = source_data.loc[source_data[CONFIGS.NAMES.INCHIKEY].isin(ref_set)]
-            source_data_nonref_mols = source_data.loc[~source_data[CONFIGS.NAMES.INCHIKEY].isin(ref_set)]
+            source_data_ref_mols = source_data.loc[source_data[config["NAMES"]["INCHIKEY"]].isin(ref_set)]
+            source_data_nonref_mols = source_data.loc[~source_data[config["NAMES"]["INCHIKEY"]].isin(ref_set)]
             # Split Violin PlotS
             if len(source_data_ref_mols) > 0:
-                violins.append(go.Violin(y=source_data_ref_mols[CONFIGS.NAMES.VALUE], name=ref, legendgroup='Reference molecules', 
+                violins.append(go.Violin(y=source_data_ref_mols[config["NAMES"]["VALUE"]], name=ref, legendgroup='Reference molecules', 
                                          side='negative', line_color=self.hex_colors[1], meanline_visible=True, showlegend=False,
                                          spanmode='manual', span=[self.lower_bound, self.upper_bound],
                                          marker=dict(outliercolor=self.hex_colors[1])))
             if len(source_data_nonref_mols) > 0:
-                violins.append(go.Violin(y=source_data_nonref_mols[CONFIGS.NAMES.VALUE], name=ref,  legendgroup='Non-reference molecules', 
+                violins.append(go.Violin(y=source_data_nonref_mols[config["NAMES"]["VALUE"]], name=ref,  legendgroup='Non-reference molecules', 
                                          side='positive', line_color=self.hex_colors[2], meanline_visible=True, showlegend=False,
                                          spanmode='manual', span=[self.lower_bound, self.upper_bound],
                                          marker=dict(outliercolor=self.hex_colors[2], symbol='x', opacity=0.7)))
@@ -534,11 +540,11 @@ def __plotFeatureSpace_coloredbyEndpoint(self, proj, data_df):
     """
 
     # UMAP projection colored by endpoint value 
-    if self.task == CONF_TASK_CLASSIFICATION:
-        data_df[CONFIGS.NAMES.VALUE] = data_df[CONFIGS.NAMES.VALUE].astype('category')
+    if self.task == config["TASK_CLASSIFICATION"]:
+        data_df[config["NAMES"]["VALUE"]] = data_df[config["NAMES"]["VALUE"]].astype('category')
         fig = px.scatter(proj, x=0, y=1,
-                         color=data_df[CONFIGS.NAMES.VALUE], 
-                         color_discrete_sequence=self.hex_colors, category_orders={'value': data_df[CONFIGS.NAMES.VALUE].cat.categories.tolist()},
+                         color=data_df[config["NAMES"]["VALUE"]], 
+                         color_discrete_sequence=self.hex_colors, category_orders={'value': data_df[config["NAMES"]["VALUE"]].cat.categories.tolist()},
                          labels={'color':f'{self.endpoint_name} class'}, opacity=0.5)
         fig.update_layout(
             title={'text':f'[4] Feature Space Coverage', 'x':0.5, 'xanchor':'center', 'font':{'size':24}},
@@ -550,10 +556,10 @@ def __plotFeatureSpace_coloredbyEndpoint(self, proj, data_df):
             xaxis=dict(range=self.x_range), yaxis=dict(range=self.y_range)            
         )
 
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         fig = px.scatter(proj, x=0, y=1,
-                         color=data_df[CONFIGS.NAMES.VALUE], 
-                         color_continuous_scale=px.colors.sequential.Viridis, color_continuous_midpoint=data_df[CONFIGS.NAMES.VALUE].mean(),
+                         color=data_df[config["NAMES"]["VALUE"]], 
+                         color_continuous_scale=px.colors.sequential.Viridis, color_continuous_midpoint=data_df[config["NAMES"]["VALUE"]].mean(),
                          labels={'color':f'{self.endpoint_name}'}, opacity=0.5)
         fig.update_layout(
             title={'text':f'[4] Feature Space Coverage', 'x':0.5, 'xanchor':'center', 'font':{'size':24}},
@@ -578,7 +584,7 @@ def __plotFeatureSpace_coloredbyDataset(self, proj, data_df):
 
     # UMAP projection colored by data source
     fig = px.scatter(proj, x=0, y=1,
-                     color=data_df[CONFIGS.NAMES.REF], 
+                     color=data_df[config["NAMES"]["REF"]], 
                      color_discrete_sequence=self.hex_colors, category_orders={'color':self.sources_list},
                      labels={'color':'Data source'}, opacity=0.5)
     fig.update_layout(
@@ -611,7 +617,7 @@ def __plotFeatureSpace_KDEplot(self, proj, data_df):
     # KDE plot
     plt.figure(figsize=(9, 9))
     kde = sns.kdeplot(data=pd.DataFrame(proj, columns=['0', '1']), x='0', y='1', 
-                      hue=data_df[CONFIGS.NAMES.REF], hue_order=self.sources_list, palette=palette)
+                      hue=data_df[config["NAMES"]["REF"]], hue_order=self.sources_list, palette=palette)
 
     plt.title('[6] Feature Space Coverage (KDE plot)', fontsize=20)
     plt.xlabel(f'{self.dimensionality_technique}1', fontsize=14)
@@ -665,7 +671,7 @@ def __plotDatasetsIntersection(self, data_df):
     # Get the molecule set for each dataset
     mols_per_source = {}
     for ref in self.sources_list:
-        mols_per_source[ref] = data_df[CONFIGS.NAMES.INCHIKEY].loc[data_df[CONFIGS.NAMES.REF] == ref].unique().tolist()
+        mols_per_source[ref] = data_df[config["NAMES"]["INCHIKEY"]].loc[data_df[config["NAMES"]["REF"]] == ref].unique().tolist()
 
     # 2 DATASETS
     if len(mols_per_source) == 2: 
@@ -727,11 +733,11 @@ def __plotComparativeHeatmaps(self, info_df):
     """
 
     # Endpoint type specifications
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         diff_col = 'different_values_count_proportion' 
         colorbar_title = 'Proportion of different<br>values'
         text_template = '%{text}'
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         diff_col = 'mean_abs_diff' 
         colorbar_title = 'Mean Absolute Difference<br>(standardized)'
         text_template = '%{text:.3f}'
@@ -747,7 +753,7 @@ def __plotComparativeHeatmaps(self, info_df):
     difference_df = difference_df.loc[self.sources_list, self.sources_list] # reorder heatmap matrix
     difference_values_df = difference_df.copy()
 
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         difference_values_df = info_df.pivot(index='source_1', columns='source_2', values='different_values_count')
 
     # Create the figure

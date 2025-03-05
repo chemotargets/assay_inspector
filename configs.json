@@ -1,0 +1,31 @@
+{
+    "RANDOM_SEED": 12345,
+    "HPO_TIME_BUDGET": 600,
+    "METRICS_FILE_NAME": "metrics.tsv",
+    "MAIN_METRICS_FILE_NAME": "main_metrics.tsv",
+    "VALIDATION": {
+        "VALIDATION_METHOD": "KFOLD",
+        "VALIDATION_PARAMS": {
+            "N_FOLDS": 5
+        }
+    },
+    "METRICS_ROUNDING": 4,
+    "VALUES_ROUNDING": 6,
+    "TASK_REGRESSION": "REGRESSION",
+    "TASK_CLASSIFICATION": "CLASSIFICATION",
+    "NAMES": {
+        "ENDPOINT_ID": "endpoint",
+        "VALUE": "value",
+        "REF": "ref",
+        "RMSE": "rmse",
+        "MAE": "mae",
+        "R2": "r2",
+        "INCHIKEY": "inchikey",
+        "SMILES": "smiles"
+    },
+    "TASK": {
+        "REGRESSION": {
+            "METRIC": "RMSE"
+        }
+    }
+}

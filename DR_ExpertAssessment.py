@@ -15,6 +15,12 @@ import numpy as np
 
 from DR_Utils import classify_skewness, formatWarningTitle
 
+import json
+
+### Configs
+with open("configs.json", "r") as file:
+    config = json.load(file)
+
 ###
 def __checkEndpointDistribution(self, endpoint_distribution_results, meandiff_thresh, alpha=0.01):
 
@@ -52,17 +58,17 @@ def __checkValueRange(self, data_df):
     # Select the datasets with an inconsistent value range
     diff_iqr_results = []
     for ref in self.sources_list:
-        source_data = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref]
-        other_sources_data = data_df.loc[data_df[CONFIGS.NAMES.REF] != ref]
+        source_data = data_df.loc[data_df[config["NAMES"]["REF"]] == ref]
+        other_sources_data = data_df.loc[data_df[config["NAMES"]["REF"]] != ref]
         # Calculate both IQR's
-        iqr_source = source_data[CONFIGS.NAMES.VALUE].describe()['75%'] - source_data[CONFIGS.NAMES.VALUE].describe()['25%']
-        iqr_other_sources = other_sources_data[CONFIGS.NAMES.VALUE].describe()['75%'] - other_sources_data[CONFIGS.NAMES.VALUE].describe()['25%']
+        iqr_source = source_data[config["NAMES"]["VALUE"]].describe()['75%'] - source_data[config["NAMES"]["VALUE"]].describe()['25%']
+        iqr_other_sources = other_sources_data[config["NAMES"]["VALUE"]].describe()['75%'] - other_sources_data[config["NAMES"]["VALUE"]].describe()['25%']
         # Check if the source IQR is greater than one order of magnitude compared to other-sources IQR
         if np.floor(np.log10(iqr_source)) != np.floor(np.log10(iqr_other_sources)):
             diff_iqr_results.append([ref, iqr_source, iqr_other_sources])
 
     # Generate the resulting DataFrame
-    diff_iqr_df = pd.DataFrame(data=diff_iqr_results, columns=[CONFIGS.NAMES.REF, 'iqr_source', 'iqr_entire_dataset'])
+    diff_iqr_df = pd.DataFrame(data=diff_iqr_results, columns=[config["NAMES"]["REF"], 'iqr_source', 'iqr_entire_dataset'])
 
     return diff_iqr_df
     
@@ -148,7 +154,7 @@ def __identifyDissimilarDatasets(self, feature_similarity_results):
 
     # Create a DataFrame with the results of the feature similarity analysis
     feature_similarity_df = pd.DataFrame(data=[(item[0], sum(item[1]) / len(item[1]), sum(item[2]) / len(item[2])) for item in feature_similarity_results],
-                                         columns=[CONFIGS.NAMES.REF,'average_within_similarity','average_between_similarity'])
+                                         columns=[config["NAMES"]["REF"],'average_within_similarity','average_between_similarity'])
     # Calculate the mean and standard deviation of the distribution of between-source similarities
     mean = np.mean([element for item in feature_similarity_results for element in item[2]])
     std = np.std([element for item in feature_similarity_results for element in item[2]])
@@ -170,9 +176,9 @@ def __identifyConflictingDatasets(self, discrepancies_df):
     """
 
     # Endpoint type specifications
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         diff_col = 'different_values_count_proportion'
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         diff_col = 'mean_abs_diff'
     # Select the conflicting dataset pairs
     conflicting_sources_df = discrepancies_df.loc[(discrepancies_df['percent_common_mols'] >= 50) & (discrepancies_df[diff_col] >= 0.1)].reset_index()
@@ -190,8 +196,8 @@ def __identifyDivergentDatasets(self, data_df):
     # Calculate the molecule overlap in 1vsOthers setting
     percent_common_mols_results = []
     for ref in self.sources_list:
-        source_mols = data_df[CONFIGS.NAMES.INCHIKEY].loc[data_df[CONFIGS.NAMES.REF] == ref].to_list()
-        other_sources_mols = data_df[CONFIGS.NAMES.INCHIKEY].loc[data_df[CONFIGS.NAMES.REF] != ref].to_list()
+        source_mols = data_df[config["NAMES"]["INCHIKEY"]].loc[data_df[config["NAMES"]["REF"]] == ref].to_list()
+        other_sources_mols = data_df[config["NAMES"]["INCHIKEY"]].loc[data_df[config["NAMES"]["REF"]] != ref].to_list()
         # Find common molecules 
         common_mols = set(source_mols).intersection(set(other_sources_mols))
         # Compute the percentage of common molecules
@@ -199,7 +205,7 @@ def __identifyDivergentDatasets(self, data_df):
         percent_common_mols_results.append([ref, percent_common_mols])
 
     # Generate the resulting DataFrame
-    percent_common_mols_df = pd.DataFrame(data=percent_common_mols_results, columns=[CONFIGS.NAMES.REF, 'percent_common_mols'])
+    percent_common_mols_df = pd.DataFrame(data=percent_common_mols_results, columns=[config["NAMES"]["REF"], 'percent_common_mols'])
     # Select the divergent datasets
     divergent_sources_df = percent_common_mols_df.loc[percent_common_mols_df['percent_common_mols'] <= 10].reset_index()
     # Sort the datasets by their percentage of common molecules
@@ -249,10 +255,10 @@ def __writeToTXT(self, diff_distribution_df, diff_range_df, skewed_distribution_
     """
 
     # Endpoint type specifications    
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         diff_col = 'different_values_count_proportion'
         diff_name = 'Proportion of different values'
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         diff_col = 'mean_abs_diff'
         diff_name = 'Mean Absolute Difference'
 
@@ -261,7 +267,7 @@ def __writeToTXT(self, diff_distribution_df, diff_range_df, skewed_distribution_
         f.write('########################### EXPERT ASSESSMENT #############################\n')
         f.write('###########################################################################\n')
 
-        if self.task == CONF_TASK_REGRESSION:
+        if self.task == config["TASK_REGRESSION"]:
             # WARNING 1: Endpoint Distribution Warning
             f.write(formatWarningTitle(text='Endpoint Distribution'))
             if diff_distribution_df.shape[0] > 0:
@@ -278,7 +284,7 @@ def __writeToTXT(self, diff_distribution_df, diff_range_df, skewed_distribution_
             if diff_range_df.shape[0] > 0:
                 f.write(f'Data sources with an inconsistent {self.endpoint_name} value range (> 1 order of magnitude):\n')
                 for i,row in diff_range_df.iterrows():
-                    f.write(f'{i+1}) {row[CONFIGS.NAMES.REF]} --> Source\'s IQR: {round(row["iqr_source"], 2)} vs. Other-sources\' IQR: {round(row["iqr_entire_dataset"], 2)}\n')
+                    f.write(f'{i+1}) {row[config["NAMES"]["REF"]]} --> Source\'s IQR: {round(row["iqr_source"], 2)} vs. Other-sources\' IQR: {round(row["iqr_entire_dataset"], 2)}\n')
                     if i+1 == diff_range_df.shape[0]:
                         f.write(f'\t***Figure reference: {self.endpoint_name} Distribution Across Data Sources (Violin Plots) [Fig 3.2].\n')  
             else:
@@ -337,7 +343,7 @@ def __writeToTXT(self, diff_distribution_df, diff_range_df, skewed_distribution_
         if dissimilar_sources_df.shape[0] > 0:    
             f.write(f'Data sources which are dissimilar in terms of the molecular feature profile:\n')
             for i,row in dissimilar_sources_df.iterrows():
-                f.write(f'{i+1}) {row[CONFIGS.NAMES.REF]} --> Average between-source distance: {round(row["average_between_similarity"], 2)}\n')
+                f.write(f'{i+1}) {row[config["NAMES"]["REF"]]} --> Average between-source distance: {round(row["average_between_similarity"], 2)}\n')
                 if i+1 == dissimilar_sources_df.shape[0]:
                     f.write(f'\t***Figure reference: Feature Space Coverage (KDE plot) [Fig 6].\n') # Pairwise Between-Source Similarity plot could also be used as reference
         else:
@@ -359,7 +365,7 @@ def __writeToTXT(self, diff_distribution_df, diff_range_df, skewed_distribution_
         if divergent_sources_df.shape[0] > 0:
             f.write(f'Data sources which are divergent due to a low overlap with the rest of sources (<10% shared molecules):\n')
             for i,row in divergent_sources_df.iterrows():
-                f.write(f'{i+1}) {row[CONFIGS.NAMES.REF]} --> Percentage of common molecules: {round(row["percent_common_mols"], 2)}%\n')
+                f.write(f'{i+1}) {row[config["NAMES"]["REF"]]} --> Percentage of common molecules: {round(row["percent_common_mols"], 2)}%\n')
                 if i+1 == divergent_sources_df.shape[0]:
                     f.write(f'\t***Figure reference: Between-Source Discrepancies [Fig 9].\n')
         else:
@@ -382,7 +388,7 @@ def __writeToTXT(self, diff_distribution_df, diff_range_df, skewed_distribution_
             if underrepresented_sources_df.shape[0] > 0:
                 f.write(f'Data sources with a low proportion of reference molecules (<15%):\n')
                 for i,row in underrepresented_sources_df.iterrows():
-                    f.write(f'{i+1}) {row[CONFIGS.NAMES.REF]} --> Percentage of reference molecules: {round(row["prop_ref_mols"], 2)}% ({row["num_ref_mols"]} molecules)\n')
+                    f.write(f'{i+1}) {row[config["NAMES"]["REF"]]} --> Percentage of reference molecules: {round(row["prop_ref_mols"], 2)}% ({row["num_ref_mols"]} molecules)\n')
                     if i+1 == underrepresented_sources_df.shape[0]:
                         f.write(f'\t***Figure reference: Comparison of {self.endpoint_name} Distribution for Reference vs. Non-Reference Molecules Across Data Sources [Fig EXTRA].\n')
             else:
@@ -407,9 +413,9 @@ def __generateExpertAssessment(self, data_df, skewness_results, outliers_results
     - which are underrepresented in reference molecules (only when a reference set is defined).
     """
 
-    if self.task == CONF_TASK_REGRESSION:
+    if self.task == config["TASK_REGRESSION"]:
         # WARNING 1: Endpoint Distribution Warning
-        std_dev = data_df[CONFIGS.NAMES.VALUE].std() # Calculate standard deviation of the endpoint distribution using the entire dataset
+        std_dev = data_df[config["NAMES"]["VALUE"]].std() # Calculate standard deviation of the endpoint distribution using the entire dataset
         diff_distribution_df = self.__checkEndpointDistribution(endpoint_distribution_results, meandiff_thresh=std_dev)
         # WARNING 1.1: Value Range Warning
         diff_range_df = self.__checkValueRange(data_df)
@@ -422,7 +428,7 @@ def __generateExpertAssessment(self, data_df, skewness_results, outliers_results
         # WARNING 1.5: Out-Of-Range Data Warning
         oor_data_df = self.__checkOORDataPoints(oor_results)
 
-    elif self.task == CONF_TASK_CLASSIFICATION:
+    elif self.task == config["TASK_CLASSIFICATION"]:
         diff_distribution_df = diff_range_df = skewed_distribution_df = outliers_df = abnormal_data_df = oor_data_df = None
 
     # WARNING 2: Dissimilar Datasets Warning

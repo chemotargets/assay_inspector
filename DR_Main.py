@@ -17,11 +17,22 @@ from DR_Visualization import *
 from DR_OutputFile import *
 from DR_ExpertAssessment import *
 
+from DR_MoleculeData import MoleculeData
+from DR_MoleculeInfo import MoleculeInfo
+
+from DR_Utils import logging
+
 import datetime
 import seaborn as sns
 
 import os
+import json
 
+### Configs
+with open("configs.json", "r") as file:
+    config = json.load(file)
+
+###
 class DataReporting():
 
     """
@@ -93,14 +104,14 @@ class DataReporting():
             ref_inchikeys = self.__getInChIKeySet(ref_instance)
 
         # Check data type of the endpoint
-        if self.task == CONF_TASK_CLASSIFICATION:
-            endpoint_classes = data[CONFIGS.NAMES.VALUE].unique()
+        if self.task == config["TASK_CLASSIFICATION"]:
+            endpoint_classes = data[config["NAMES"]["VALUE"]].unique()
             if len(endpoint_classes) != 2: 
                 writeToLog(logLevel="error", oriMessage= f"The number of endpoint classes is {len(endpoint_classes)} ({', '.join(endpoint_classes)}), but 2 were expected", toFile=False)
 
-        elif self.task == CONF_TASK_REGRESSION:
-            if not pd.api.types.is_numeric_dtype(data[CONFIGS.NAMES.VALUE]):
-                writeToLog(logLevel="error", oriMessage= f"The data type of the endpoint value is not numeric but {data[CONFIGS.NAMES.VALUE].dtype}", toFile=False)
+        elif self.task == config["TASK_REGRESSION"]:
+            if not pd.api.types.is_numeric_dtype(data[config["NAMES"]["VALUE"]]):
+                writeToLog(logLevel="error", oriMessage= f"The data type of the endpoint value is not numeric but {data[config["NAMES"]["VALUE"]].dtype}", toFile=False)
 
         # Count the number of molecules
         n_mols = self.__getNmols(data)
@@ -113,7 +124,7 @@ class DataReporting():
             prop_ref_mols = self.__calculatePropRefMols(data, ref_inchikeys)
 
         outliers_set = None
-        if self.task == CONF_TASK_REGRESSION:
+        if self.task == config["TASK_REGRESSION"]:
             # Compute skewness and kurtosis
             skewness = self.__calculateSkewness(data)
             kurtosis_df = self.__calculateKurtosis(data)
@@ -130,12 +141,12 @@ class DataReporting():
         # Generate the final DataFrame and save it into a TSV file
         writeToLog(logLevel="info", oriMessage= f"Creating report on {self.endpoint_name} individual dataset", toFile=True)
 
-        if self.task == CONF_TASK_CLASSIFICATION:
+        if self.task == config["TASK_CLASSIFICATION"]:
             summary_df = pd.DataFrame(data=[[self.endpoint_name , 'entire_dataset'] + n_mols + statistics],
-                                      columns=[CONFIGS.NAMES.ENDPOINT_ID,'dataset','num_mols','class_counts','class_ratio'])
-        elif self.task == CONF_TASK_REGRESSION:
+                                      columns=[config["NAMES"]["ENDPOINT_ID"],'dataset','num_mols','class_counts','class_ratio'])
+        elif self.task == config["TASK_REGRESSION"]:
             summary_df = pd.DataFrame(data=[[self.endpoint_name, 'entire_dataset'] + n_mols + statistics + skewness + kurtosis_df + outliers_info + oor_data],
-                                      columns=[CONFIGS.NAMES.ENDPOINT_ID,'dataset','num_mols','mean','standard_deviation','minimum','1st_quartile','median','3rd_quartile','maximum',
+                                      columns=[config["NAMES"]["ENDPOINT_ID"],'dataset','num_mols','mean','standard_deviation','minimum','1st_quartile','median','3rd_quartile','maximum',
                                               'skewness_value','skewness_statistic','skewness_pvalue','kurtosis_value','kurtosis_statistic','kurtosis_pvalue','n_outliers_Zscore','prop_outliers_Zscore',
                                               'n_abnormals_Zscore','prop_abnormals_Zscore','n_outliers_IQR','prop_outliers_IQR','n_upper_oor','n_lower_oor'])
             
@@ -145,7 +156,7 @@ class DataReporting():
         self.__writeToTSV(summary_df)
 
        
-        if self.task == CONF_TASK_REGRESSION:
+        if self.task == config["TASK_REGRESSION"]:
             # Visualize outliers
             self.__VisualizeOutliers(data, outliers_set)
 
@@ -197,18 +208,18 @@ class DataReporting():
             ref_inchikeys = self.__getInChIKeySet(ref_instance)
 
         # Check data type of the endpoint value
-        if self.task == CONF_TASK_CLASSIFICATION:
-            endpoint_classes = data[CONFIGS.NAMES.VALUE].unique()
+        if self.task == config["TASK_CLASSIFICATION"]:
+            endpoint_classes = data[config["NAMES"]["VALUE"]].unique()
             if len(endpoint_classes) != 2:
                 writeToLog(logLevel="error", oriMessage= f"The number of endpoint classes is {len(endpoint_classes)} ({', '.join(endpoint_classes)}), but 2 were expected", toFile=False)
 
-        elif self.task == CONF_TASK_REGRESSION:
-            if not pd.api.types.is_numeric_dtype(data[CONFIGS.NAMES.VALUE]):
-                writeToLog(logLevel="error", oriMessage= f"The data type of the endpoint value is not numeric but {data[CONFIGS.NAMES.VALUE].dtype}", toFile=False)
+        elif self.task == config["TASK_REGRESSION"]:
+            if not pd.api.types.is_numeric_dtype(data[config["NAMES"]["VALUE"]]):
+                writeToLog(logLevel="error", oriMessage= f"The data type of the endpoint value is not numeric but {data[config["NAMES"]["VALUE"]].dtype}", toFile=False)
 
         # Get the list of sources and sort them by counts
-        sources_list = data[CONFIGS.NAMES.REF].unique().tolist()
-        sources_counts = {ref: len(data.loc[data[CONFIGS.NAMES.REF] == ref]) for ref in sources_list}
+        sources_list = data[config["NAMES"]["REF"]].unique().tolist()
+        sources_counts = {ref: len(data.loc[data[config["NAMES"]["REF"]] == ref]) for ref in sources_list}
         self.sources_list = sorted(sources_list, key=lambda ref: sources_counts[ref], reverse=True)
 
         # Verify the presence of multiple data sources
@@ -238,7 +249,7 @@ class DataReporting():
         else: 
             prop_ref_mols_total = prop_ref_mols_sources = None
 
-        if self.task == CONF_TASK_REGRESSION:
+        if self.task == config["TASK_REGRESSION"]:
             # Compute skewness and kurtosis on the entire dataset
             skewness_entire_dataset = self.__calculateSkewness(data)
             kurtosis_entire_dataset = self.__calculateKurtosis(data)
@@ -282,7 +293,7 @@ class DataReporting():
                                                 outliers_info_sources, oor_entire_dataset, oor_sources, endpoint_distribution_results, feature_similarity_results)
         self.__writeToTSV(summary_df)
 
-        if self.task == CONF_TASK_REGRESSION:
+        if self.task == config["TASK_REGRESSION"]:
             # Visualize outliers
             self.__VisualizeOutliers(data, outliers_set_entire_dataset) 
 

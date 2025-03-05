@@ -11,6 +11,14 @@ __deprecated__ = False
 
 ### Imports
 
+from DR_FeaturesPreprocessing import FeaturesPreprocessing
+
+import json
+
+### Configs
+with open("configs.json", "r") as file:
+    config = json.load(file)
+
 ###
 def __getMoleculeProfileDataframe(self, data, reporting):
 
@@ -20,12 +28,12 @@ def __getMoleculeProfileDataframe(self, data, reporting):
 
     # Deduplicate the dataset 
     if reporting == 'individual':
-        data._deduplicate(subset=[CONFIGS.NAMES.INCHIKEY], endpoint2task={self.endpoint_name:self.task})
+        data._deduplicate(subset=[config["NAMES"]["INCHIKEY"]], endpoint2task={self.endpoint_name:self.task})
     elif reporting == 'comparative':
-        data._deduplicate(subset=[CONFIGS.NAMES.INCHIKEY,CONFIGS.NAMES.REF], endpoint2task={self.endpoint_name:self.task})
+        data._deduplicate(subset=[config["NAMES"]["INCHIKEY"],config["NAMES"]["REF"]], endpoint2task={self.endpoint_name:self.task})
 
     # Select the data corresponding to the given endpoint
-    data = data.splitBy(CONFIGS.NAMES.ENDPOINT_ID)[self.endpoint_name]
+    data = data.splitBy(config["NAMES"]["ENDPOINT_ID"])[self.endpoint_name]
 
     # Perform feature preprocessing
     preprocessing = FeaturesPreprocessing()
@@ -33,7 +41,7 @@ def __getMoleculeProfileDataframe(self, data, reporting):
 
     # Get the molecule DataFrame
     data_df = data.getDataframe(features=[self.features],
-                                columns=[CONFIGS.NAMES.INCHIKEY, CONFIGS.NAMES.VALUE, CONFIGS.NAMES.REF, CONFIGS.NAMES.ENDPOINT_ID])
+                                columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"], config["NAMES"]["REF"], config["NAMES"]["ENDPOINT_ID"]])
 
     return data_df
 
@@ -45,9 +53,9 @@ def __getInChIKeySet(self, mol_data):
     """
 
     # Get the DataFrame of reference molecules
-    ref_df = mol_data.getDataframe(columns=[CONFIGS.NAMES.INCHIKEY, 'smiles']) # TODO: Change to a constant?
+    ref_df = mol_data.getDataframe(columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["SMILES"]]) 
     
     # Extract the InChIKey set
-    inchikeys_set = set(ref_df[CONFIGS.NAMES.INCHIKEY].tolist())
+    inchikeys_set = set(ref_df[config["NAMES"]["INCHIKEY"]].tolist())
 
     return inchikeys_set

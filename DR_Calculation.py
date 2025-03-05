@@ -23,6 +23,14 @@ from umap import UMAP
 from sklearn.preprocessing import MinMaxScaler
 from itertools import combinations
 
+from DR_MoleculeInfo import MoleculeInfo
+
+import json
+
+### Configs
+with open("configs.json", "r") as file:
+    config = json.load(file)
+
 ### 
 def __getNmols(self, data_df):
 
@@ -41,7 +49,7 @@ def __getNmols_perDataset(self, data_df):
 
     n_mols_sources = []
     for ref in self.sources_list:
-        n_mols = self.__getNmols(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref])
+        n_mols = self.__getNmols(data_df.loc[data_df[config["NAMES"]["REF"]] == ref])
         n_mols_sources.append([ref]+n_mols)
 
     return pd.DataFrame(data=n_mols_sources, columns=['dataset','num_mols'])
@@ -54,7 +62,7 @@ def __calculatePropRefMols(self, data_df, ref_set):
     """
 
     # Get the subset of reference molecules in the dataset
-    source_mols = set(data_df[CONFIGS.NAMES.INCHIKEY].tolist())
+    source_mols = set(data_df[config["NAMES"]["INCHIKEY"]].tolist())
     source_ref_mols = ref_set.intersection(source_mols)
     # Compute the number and percentage of reference molecules
     num_mols = len(source_ref_mols)
@@ -73,7 +81,7 @@ def __calculatePropRefMols_perDataset(self, data_df, ref_set):
 
     ref_mols_sources = []
     for ref in self.sources_list:
-        ref_mols = self.__calculatePropRefMols(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref], ref_set)
+        ref_mols = self.__calculatePropRefMols(data_df.loc[data_df[config["NAMES"]["REF"]] == ref], ref_set)
         ref_mols_sources.append([ref]+ref_mols)
 
     return pd.DataFrame(data=ref_mols_sources, columns=['dataset','num_ref_mols','prop_ref_mols'])
@@ -86,15 +94,15 @@ def __calculateEndpointStatistics(self, data_df):
     """
 
     # Compute endpoint statistics
-    if self.task == CONF_TASK_CLASSIFICATION:
-        value_counts = ', '.join([f'{value}: {count}' for value, count in sorted(data_df[CONFIGS.NAMES.VALUE].value_counts().items())])
-        counts = [count for value, count in sorted(data_df[CONFIGS.NAMES.VALUE].value_counts().items())]
+    if self.task == config["TASK_CLASSIFICATION"]:
+        value_counts = ', '.join([f'{value}: {count}' for value, count in sorted(data_df[config["NAMES"]["VALUE"]].value_counts().items())])
+        counts = [count for value, count in sorted(data_df[config["NAMES"]["VALUE"]].value_counts().items())]
         ratio = ':'.join(f'{count / np.min(counts):.1f}' for count in counts)
         
         return [value_counts, ratio]
     
-    elif self.task == CONF_TASK_REGRESSION:
-        endpoint_description = data_df[CONFIGS.NAMES.VALUE].describe()
+    elif self.task == config["TASK_REGRESSION"]:
+        endpoint_description = data_df[config["NAMES"]["VALUE"]].describe()
         
         return endpoint_description.tolist()[1:]
     
@@ -107,12 +115,12 @@ def __calculateEndpointStatistics_perDataset(self, data_df):
 
     statistics_sources = []
     for ref in self.sources_list:
-        statisticts = self.__calculateEndpointStatistics(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref])
+        statisticts = self.__calculateEndpointStatistics(data_df.loc[data_df[config["NAMES"]["REF"]] == ref])
         statistics_sources.append([ref]+statisticts)
 
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         return pd.DataFrame(data=statistics_sources, columns=['dataset','class_counts','class_ratio'])
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         return pd.DataFrame(data=statistics_sources, columns=['dataset','mean','standard_deviation','minimum',
                                                               '1st_quartile','median','3rd_quartile','maximum'])
     
@@ -127,10 +135,10 @@ def __calculateSkewness(self, data_df):
     """
 
     # Compute skewness 
-    skewness = skew(data_df[CONFIGS.NAMES.VALUE].tolist(), axis=0, bias=True)
+    skewness = skew(data_df[config["NAMES"]["VALUE"]].tolist(), axis=0, bias=True)
 
     # Skewness test
-    skewness_test = skewtest(data_df[CONFIGS.NAMES.VALUE].tolist(), axis=0)
+    skewness_test = skewtest(data_df[config["NAMES"]["VALUE"]].tolist(), axis=0)
     statistic = skewness_test[0]
     pvalue = skewness_test[1]
 
@@ -146,7 +154,7 @@ def __calculateSkewness_perDataset(self, data_df):
 
     skewness_sources = []
     for ref in self.sources_list:
-        skewness = self.__calculateSkewness(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref])
+        skewness = self.__calculateSkewness(data_df.loc[data_df[config["NAMES"]["REF"]] == ref])
         skewness_sources.append([ref]+skewness)
 
     return pd.DataFrame(data=skewness_sources, columns=['dataset','skewness_value','skewness_statistic','skewness_pvalue'])
@@ -161,10 +169,10 @@ def __calculateKurtosis(self, data_df):
     """
 
     # Calculate kurtosis 
-    kurtosis_value = kurtosis(data_df[CONFIGS.NAMES.VALUE].tolist(), axis=0, fisher=True, bias=True)
+    kurtosis_value = kurtosis(data_df[config["NAMES"]["VALUE"]].tolist(), axis=0, fisher=True, bias=True)
 
     # Kurtosis test
-    kurtosis_test = kurtosistest(data_df[CONFIGS.NAMES.VALUE].tolist(), axis=0)
+    kurtosis_test = kurtosistest(data_df[config["NAMES"]["VALUE"]].tolist(), axis=0)
     statistic = kurtosis_test[0]
     pvalue = kurtosis_test[1]
 
@@ -180,7 +188,7 @@ def __calculateKurtosis_perDataset(self, data_df):
 
     kurtosis_sources = []
     for ref in self.sources_list:
-        kurtosis_info = self.__calculateKurtosis(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref])
+        kurtosis_info = self.__calculateKurtosis(data_df.loc[data_df[config["NAMES"]["REF"]] == ref])
         kurtosis_sources.append([ref]+kurtosis_info)
 
     return pd.DataFrame(data=kurtosis_sources, columns=['dataset','kurtosis_value','kurtosis_statistic','kurtosis_pvalue'])
@@ -208,8 +216,8 @@ def __identifyOutliers(self, data_df):
     """
 
     # 1st METHOD: Z-score computation
-    zscore_df = data_df[[CONFIGS.NAMES.INCHIKEY, CONFIGS.NAMES.ENDPOINT_ID, CONFIGS.NAMES.REF, CONFIGS.NAMES.VALUE]]
-    zscore_df['zscore'] = zscore_df[CONFIGS.NAMES.VALUE].apply(lambda x: (x - zscore_df[CONFIGS.NAMES.VALUE].mean()) / zscore_df[CONFIGS.NAMES.VALUE].std())
+    zscore_df = data_df[[config["NAMES"]["INCHIKEY"], config["NAMES"]["ENDPOINT_ID"], config["NAMES"]["REF"], config["NAMES"]["VALUE"]]]
+    zscore_df['zscore'] = zscore_df[config["NAMES"]["VALUE"]].apply(lambda x: (x - zscore_df[config["NAMES"]["VALUE"]].mean()) / zscore_df[config["NAMES"]["VALUE"]].std())
     zscore_outliers = zscore_df.loc[(zscore_df['zscore'] > 3) | (zscore_df['zscore'] < -3)]
     n_outliers_zscore = len(zscore_outliers)
     prop_outliers_zscore = (n_outliers_zscore / data_df.shape[0]) * 100
@@ -220,19 +228,19 @@ def __identifyOutliers(self, data_df):
     prop_abnormals = (n_abnormals / data_df.shape[0]) * 100
 
     # 2nd METHOD: 1.5xIQR rule
-    iqr_df = data_df[[CONFIGS.NAMES.INCHIKEY, CONFIGS.NAMES.ENDPOINT_ID, CONFIGS.NAMES.REF, CONFIGS.NAMES.VALUE]]
-    iqr = (iqr_df[CONFIGS.NAMES.VALUE].describe()['75%'] - iqr_df[CONFIGS.NAMES.VALUE].describe()['25%'])
-    upper_fence = iqr_df[CONFIGS.NAMES.VALUE].describe()['75%'] + (1.5*iqr)
-    lower_fence = iqr_df[CONFIGS.NAMES.VALUE].describe()['25%'] - (1.5*iqr)
-    iqr_outliers = iqr_df.loc[(iqr_df[CONFIGS.NAMES.VALUE] > upper_fence) | (iqr_df[CONFIGS.NAMES.VALUE] < lower_fence)]
+    iqr_df = data_df[[config["NAMES"]["INCHIKEY"], config["NAMES"]["ENDPOINT_ID"], config["NAMES"]["REF"], config["NAMES"]["VALUE"]]]
+    iqr = (iqr_df[config["NAMES"]["VALUE"]].describe()['75%'] - iqr_df[config["NAMES"]["VALUE"]].describe()['25%'])
+    upper_fence = iqr_df[config["NAMES"]["VALUE"]].describe()['75%'] + (1.5*iqr)
+    lower_fence = iqr_df[config["NAMES"]["VALUE"]].describe()['25%'] - (1.5*iqr)
+    iqr_outliers = iqr_df.loc[(iqr_df[config["NAMES"]["VALUE"]] > upper_fence) | (iqr_df[config["NAMES"]["VALUE"]] < lower_fence)]
     n_outliers_iqr = len(iqr_outliers)
     prop_outliers_iqr = (n_outliers_iqr / data_df.shape[0]) * 100
 
     # Define the outliers set
     if self.outliers_method == 'zscore':
-        outliers_set = set(zscore_outliers[CONFIGS.NAMES.INCHIKEY].tolist())
+        outliers_set = set(zscore_outliers[config["NAMES"]["INCHIKEY"]].tolist())
     elif self.outliers_method == 'iqr':
-        outliers_set = set(iqr_outliers[CONFIGS.NAMES.INCHIKEY].tolist())
+        outliers_set = set(iqr_outliers[config["NAMES"]["INCHIKEY"]].tolist())
 
     return [n_outliers_zscore, prop_outliers_zscore, n_abnormals, prop_abnormals, n_outliers_iqr, prop_outliers_iqr], outliers_set
 
@@ -246,7 +254,7 @@ def __identifyOutliers_perDataset(self, data_df):
     outliers_sources = []
     outliers_dict = {}
     for ref in self.sources_list:
-        outliers_info, outliers_set = self.__identifyOutliers(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref])
+        outliers_info, outliers_set = self.__identifyOutliers(data_df.loc[data_df[config["NAMES"]["REF"]] == ref])
         outliers_sources.append([ref]+outliers_info)
         outliers_dict[ref] = outliers_set
 
@@ -270,12 +278,12 @@ def __identifyOORDataPoints(self, data_df):
 
     # Find data points above the upper bound
     if self.upper_bound is not None:
-        upper_oor_data = data_df.loc[data_df[CONFIGS.NAMES.VALUE] > self.upper_bound]
+        upper_oor_data = data_df.loc[data_df[config["NAMES"]["VALUE"]] > self.upper_bound]
         upper_oor_counts = len(upper_oor_data)
 
     # Find data points below the lower bound
     if self.lower_bound is not None:
-        lower_oor_data = data_df.loc[data_df[CONFIGS.NAMES.VALUE] < self.lower_bound]
+        lower_oor_data = data_df.loc[data_df[config["NAMES"]["VALUE"]] < self.lower_bound]
         lower_oor_counts = len(lower_oor_data)
 
     return [upper_oor_counts, lower_oor_counts]
@@ -289,7 +297,7 @@ def __identifyOORDataPoints_perDataset(self, data_df):
 
     oor_data_sources = []
     for ref in self.sources_list:
-        oor_data = self.__identifyOORDataPoints(data_df.loc[data_df[CONFIGS.NAMES.REF] == ref])
+        oor_data = self.__identifyOORDataPoints(data_df.loc[data_df[config["NAMES"]["REF"]] == ref])
         oor_data_sources.append([ref]+oor_data)
 
     return pd.DataFrame(data=oor_data_sources, columns=['dataset','n_upper_oor','n_lower_oor'])
@@ -310,17 +318,17 @@ def __compareEndpointDistribution_acrossDatasets(self, data_df):
     statistical_results_sources = []
 
     for ref in self.sources_list:
-        if self.task == CONF_TASK_CLASSIFICATION:
-            source_endpoint_value_counts = data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref].value_counts().sort_index(ascending=True)
-            others_endpoint_value_counts = data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] != ref].value_counts().sort_index(ascending=True)
+        if self.task == config["TASK_CLASSIFICATION"]:
+            source_endpoint_value_counts = data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref].value_counts().sort_index(ascending=True)
+            others_endpoint_value_counts = data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] != ref].value_counts().sort_index(ascending=True)
             # Conduct Two-sample Chi-Square test
             chi2_statistic, p_value, dof, expected_freq = chi2_contingency(np.array([source_endpoint_value_counts, others_endpoint_value_counts]), 
                                                                            correction=False)
             statistical_results_sources.append([ref, chi2_statistic, p_value, None])
         
-        elif self.task == CONF_TASK_REGRESSION:
-            source_endpoint_values = data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref].tolist()
-            others_endpoint_values = data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] != ref].tolist()
+        elif self.task == config["TASK_REGRESSION"]:
+            source_endpoint_values = data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref].tolist()
+            others_endpoint_values = data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] != ref].tolist()
             # Conduct Two-sample Kolmogorov–Smirnov test
             ks_statistic, p_value = ks_2samp(source_endpoint_values, others_endpoint_values)
             # Calculate the mean difference between both distributions
@@ -364,8 +372,8 @@ def __calculateFeatureSimilarity(self, distance_matrix, data_df):
     similarity_results = []
 
     for ref in self.sources_list:
-        source_indices = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref].index.to_list()
-        other_sources_indices = data_df.loc[data_df[CONFIGS.NAMES.REF] != ref].index.to_list()
+        source_indices = data_df.loc[data_df[config["NAMES"]["REF"]] == ref].index.to_list()
+        other_sources_indices = data_df.loc[data_df[config["NAMES"]["REF"]] != ref].index.to_list()
 
         # Iterate over each molecule in the current source and compute the minimum within- 
         # and between-source similarities
@@ -397,8 +405,8 @@ def __calculateFeatureSimilarity_Pairwise(self, distance_matrix, data_df):
     for ref1 in self.sources_list:
         for ref2 in self.sources_list:
             if ref1 != ref2:
-                ref1_indices = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref1].index.to_list()
-                ref2_indices = data_df.loc[data_df[CONFIGS.NAMES.REF] == ref2].index.to_list()
+                ref1_indices = data_df.loc[data_df[config["NAMES"]["REF"]] == ref1].index.to_list()
+                ref2_indices = data_df.loc[data_df[config["NAMES"]["REF"]] == ref2].index.to_list()
 
                 # Iterate over each molecule in the reference source (ref1) and compute the 
                 # minimum between-source similarity
@@ -425,10 +433,10 @@ def __runUMAP(self, data_df):
 
     # Run UMAP
     if self.feature_type == 'rdkit':
-        umap = UMAP(n_components=2, init='random', metric='seuclidean', random_state=CONFIGS.RANDOM_SEED)
+        umap = UMAP(n_components=2, init='random', metric='seuclidean', random_state=config["RANDOM_SEED"])
     
     elif self.feature_type == 'ecfp4':
-        umap = UMAP(n_components=2, init='random', metric='jaccard', random_state=CONFIGS.RANDOM_SEED)
+        umap = UMAP(n_components=2, init='random', metric='jaccard', random_state=config["RANDOM_SEED"])
 
     proj = umap.fit_transform(data_df.loc[:, [f'{self.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.features]]])
     
@@ -446,33 +454,33 @@ def __calculateInterDatasetDiscrepancies(self, data_df):
     """
 
     # Standardize the endpoint values (only for regression endpoints)
-    if self.task == CONF_TASK_REGRESSION:
+    if self.task == config["TASK_REGRESSION"]:
         scaler = MinMaxScaler()
-        data_df[[CONFIGS.NAMES.VALUE]] = scaler.fit_transform(data_df[[CONFIGS.NAMES.VALUE]])
+        data_df[[config["NAMES"]["VALUE"]]] = scaler.fit_transform(data_df[[config["NAMES"]["VALUE"]]])
         
     # Get the molecule set for each dataset
     mols_per_source = {}
     for ref in self.sources_list:
-        mols_per_source[ref] = data_df[[CONFIGS.NAMES.INCHIKEY, CONFIGS.NAMES.VALUE]].loc[data_df[CONFIGS.NAMES.REF] == ref]
+        mols_per_source[ref] = data_df[[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"]]].loc[data_df[config["NAMES"]["REF"]] == ref]
 
     # Calculate the number of common molecules and the endpoint value differences across source pairs (pairwise)
     data_info = []
     for ref1, ref2 in combinations(self.sources_list, 2):
-        mols_ref1 = mols_per_source[ref1].set_index(CONFIGS.NAMES.INCHIKEY)
-        mols_ref2 = mols_per_source[ref2].set_index(CONFIGS.NAMES.INCHIKEY)
+        mols_ref1 = mols_per_source[ref1].set_index(config["NAMES"]["INCHIKEY"])
+        mols_ref2 = mols_per_source[ref2].set_index(config["NAMES"]["INCHIKEY"])
 
         # Find common molecules
         common_mols = mols_ref1.index.intersection(mols_ref2.index)
 
         if len(common_mols) > 0:
-            if self.task == CONF_TASK_CLASSIFICATION:
+            if self.task == config["TASK_CLASSIFICATION"]:
                 # Calculate the number of molecules with differing annotated endpoint value
-                diff_metric = (mols_ref1.loc[common_mols][CONFIGS.NAMES.VALUE] != mols_ref2.loc[common_mols][CONFIGS.NAMES.VALUE]).sum()
+                diff_metric = (mols_ref1.loc[common_mols][config["NAMES"]["VALUE"]] != mols_ref2.loc[common_mols][config["NAMES"]["VALUE"]]).sum()
                 diff_tokens = [diff_metric, diff_metric/len(common_mols)]  
 
-            elif self.task == CONF_TASK_REGRESSION:
+            elif self.task == config["TASK_REGRESSION"]:
                 # Calculate the (standardized) endpoint absolute difference 
-                diff_metric = np.abs(mols_ref1.loc[common_mols][CONFIGS.NAMES.VALUE] - mols_ref2.loc[common_mols][CONFIGS.NAMES.VALUE])
+                diff_metric = np.abs(mols_ref1.loc[common_mols][config["NAMES"]["VALUE"]] - mols_ref2.loc[common_mols][config["NAMES"]["VALUE"]])
                 diff_tokens = [np.mean(diff_metric), np.median(diff_metric)]
         
         else:
@@ -482,9 +490,9 @@ def __calculateInterDatasetDiscrepancies(self, data_df):
         data_info.append([ref2, len(mols_ref2), ref1, len(common_mols), (len(common_mols)/len(mols_ref2))*100] + diff_tokens)          
 
     # Convert into a DataFrame
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         info_df = pd.DataFrame(data=data_info, columns=['source_1', 'num_mols', 'source_2', 'num_common_mols', 'percent_common_mols', 'different_values_count', 'different_values_count_proportion'])
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         info_df = pd.DataFrame(data=data_info, columns=['source_1', 'num_mols', 'source_2', 'num_common_mols', 'percent_common_mols', 'mean_abs_diff', 'median_abs_diff'])
 
     return info_df
@@ -499,16 +507,16 @@ def __perfromPairwiseKSTest(self, data_df):
     This type of analysis can only be conducted for regression endpoints.
     """
 
-    if self.task == CONF_TASK_CLASSIFICATION:
+    if self.task == config["TASK_CLASSIFICATION"]:
         return None
 
-    elif self.task == CONF_TASK_REGRESSION:
+    elif self.task == config["TASK_REGRESSION"]:
         # Perform pairwise comparisons using the two-sample Kolmogorov-Smirnov (KS) test
         ks_results = []
         for ref1, ref2 in combinations(self.sources_list, 2):  
-                    statistic, p_value = ks_2samp(data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref1].tolist(), data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref2].tolist())
+                    statistic, p_value = ks_2samp(data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref1].tolist(), data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref2].tolist())
                     # Calculate the absolute mean difference
-                    meandiff = np.abs(np.mean(data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref1].tolist()) - np.mean(data_df[CONFIGS.NAMES.VALUE].loc[data_df[CONFIGS.NAMES.REF] == ref2].tolist()))
+                    meandiff = np.abs(np.mean(data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref1].tolist()) - np.mean(data_df[config["NAMES"]["VALUE"]].loc[data_df[config["NAMES"]["REF"]] == ref2].tolist()))
                     ks_results.append([ref1, ref2, meandiff, p_value])
         # Generate a DataFrame with the KS test results
         ks_results_df = pd.DataFrame(ks_results, columns=['group1', 'group2', 'meandiff', 'p_value'])
