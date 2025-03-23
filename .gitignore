@@ -1,3 +1,5 @@
 test_scripts/data_testing
+test_scripts/DataReporting*
+test_scripts/logging.log
 __pycache__
 tmp

@@ -13,49 +13,61 @@ __deprecated__ = False
 
 from DR_FeaturesPreprocessing import FeaturesPreprocessing
 
+### Configs
+import os
 import json
 
-### Configs
-with open("configs.json", "r") as file:
+config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'configs.json')
+
+with open(config_path, "r") as file:
     config = json.load(file)
 
-###
-def __getMoleculeProfileDataframe(self, data, reporting):
-
+class DataLoading():
     """
-    Generates the DataFrame containing the feature profiles of the molecules. 
-    """
-
-    # Deduplicate the dataset 
-    if reporting == 'individual':
-        data._deduplicate(subset=[config["NAMES"]["INCHIKEY"]], endpoint2task={self.endpoint_name:self.task})
-    elif reporting == 'comparative':
-        data._deduplicate(subset=[config["NAMES"]["INCHIKEY"],config["NAMES"]["REF"]], endpoint2task={self.endpoint_name:self.task})
-
-    # Select the data corresponding to the given endpoint
-    data = data.splitBy(config["NAMES"]["ENDPOINT_ID"])[self.endpoint_name]
-
-    # Perform feature preprocessing
-    preprocessing = FeaturesPreprocessing()
-    data = preprocessing.fit_transform(data, features_ids=[self.features], endpoint2task={self.endpoint_name:self.task})
-
-    # Get the molecule DataFrame
-    data_df = data.getDataframe(features=[self.features],
-                                columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"], config["NAMES"]["REF"], config["NAMES"]["ENDPOINT_ID"]])
-
-    return data_df
-
-###
-def __getInChIKeySet(self, mol_data):
-
-    """
-    Generates the set of InChIKeys set for the molecules in the reference set. 
+    Class to load and generate the molecule dataframe for both endpoint dataset and reference
+    set (if provided). 
     """
 
-    # Get the DataFrame of reference molecules
-    ref_df = mol_data.getDataframe(columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["SMILES"]]) 
-    
-    # Extract the InChIKey set
-    inchikeys_set = set(ref_df[config["NAMES"]["INCHIKEY"]].tolist())
+    def __init__(self, mainSelf):
+        self.__mainSelf = mainSelf
 
-    return inchikeys_set
+    ###
+    def getMoleculeProfileDataframe(self, data, reporting):
+
+        """
+        Generates the DataFrame containing the feature profiles of the molecules. 
+        """
+
+        # Deduplicate the dataset 
+        if reporting == 'individual':
+            data._deduplicate(subset=[config["NAMES"]["INCHIKEY"]], endpoint2task={self.__mainSelf.endpoint_name:self.__mainSelf.task})
+        elif reporting == 'comparative':
+            data._deduplicate(subset=[config["NAMES"]["INCHIKEY"],config["NAMES"]["REF"]], endpoint2task={self.__mainSelf.endpoint_name:self.__mainSelf.task})
+
+        # Select the data corresponding to the given endpoint
+        data = data.splitBy(config["NAMES"]["ENDPOINT_ID"])[self.__mainSelf.endpoint_name]
+
+        # Perform feature preprocessing
+        preprocessing = FeaturesPreprocessing()
+        data = preprocessing.fit_transform(data, features_ids=[self.__mainSelf.features], endpoint2task={self.__mainSelf.endpoint_name:self.__mainSelf.task})
+
+        # Get the molecule DataFrame
+        data_df = data.DataFrame(features=[self.__mainSelf.features],
+                                    columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"], config["NAMES"]["REF"], config["NAMES"]["ENDPOINT_ID"]])
+
+        return data_df
+
+    ###
+    def getInChIKeySet(self, mol_data):
+
+        """
+        Generates the set of InChIKeys set for the molecules in the reference set. 
+        """
+
+        # Get the DataFrame of reference molecules
+        ref_df = mol_data.DataFrame(columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["SMILES"]]) 
+        
+        # Extract the InChIKey set
+        inchikeys_set = set(ref_df[config["NAMES"]["INCHIKEY"]].tolist())
+
+        return inchikeys_set

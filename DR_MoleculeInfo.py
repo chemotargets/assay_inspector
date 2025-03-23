@@ -15,7 +15,7 @@ from DR_Utils import logging, standardize
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 from rdkit.ML.Descriptors import MoleculeDescriptors
-from mordred import Calculator as mordred_calculator, descriptors as mordred_descriptors
+# from mordred import Calculator as mordred_calculator, descriptors as mordred_descriptors
 
 class MoleculeInfo():
 
@@ -28,13 +28,13 @@ class MoleculeInfo():
     ECFP4_nBits = 1024  # TODO: should it be hardcoded?
     ECFP4_radius = 2  # TODO: should it be hardcoded?
     FEAT_RDKIT_DESC = "RDKIT"
-    FEAT_MORDRED_DESC = "MORDRED"
+    # FEAT_MORDRED_DESC = "MORDRED"
     FEAT_CUSTOM = "CUSTOM"
 
     AVAILABLE_FEATURES = {
         FEAT_ECFP4 : list(range(1,ECFP4_nBits+1)),
         FEAT_RDKIT_DESC : [x[0] for x in Descriptors._descList if x[0] not in ["Ipc"]],
-        FEAT_MORDRED_DESC : [str(desc) for desc in mordred_calculator(mordred_descriptors, ignore_3D=False).descriptors],
+        # FEAT_MORDRED_DESC : [str(desc) for desc in mordred_calculator(mordred_descriptors, ignore_3D=False).descriptors],
     }
 
     ###
@@ -137,18 +137,17 @@ class MoleculeInfo():
         if not feature in self.AVAILABLE_FEATURES:
             logging.error(f"Feature {feature} not available, choose one from {list(self.AVAILABLE_FEATURES.keys())}")
             return
-        match feature:
-            case self.FEAT_ECFP4:
-                feature_vals = AllChem.GetMorganFingerprintAsBitVect(self.mol, radius=self.ECFP4_radius, nBits=self.ECFP4_nBits).ToList()
-            case self.FEAT_RDKIT_DESC:
-                # TODO: filter self.AVAILABLE_FEATURES[feature] checking if others have already computed them
-                calc = MoleculeDescriptors.MolecularDescriptorCalculator(self.AVAILABLE_FEATURES[feature])
-                feature_vals = calc.CalcDescriptors(self.mol)
-            case self.FEAT_MORDRED_DESC:
-                calc = mordred_calculator(mordred_descriptors, ignore_3D=False)(self.mol)
-                feature_vals = calc.values()
-            case _:
-                logging.error(f"Feature {feature} not available, choose one from {list(self.features.keys())}")
+        if feature == self.FEAT_ECFP4:
+            feature_vals = AllChem.GetMorganFingerprintAsBitVect(self.mol, radius=self.ECFP4_radius, nBits=self.ECFP4_nBits).ToList()
+        elif feature == self.FEAT_RDKIT_DESC:
+            # TODO: filter self.AVAILABLE_FEATURES[feature] checking if others have already computed them
+            calc = MoleculeDescriptors.MolecularDescriptorCalculator(self.AVAILABLE_FEATURES[feature])
+            feature_vals = calc.CalcDescriptors(self.mol)
+        # elif feature == self.FEAT_MORDRED_DESC:
+        #     calc = mordred_calculator(mordred_descriptors, ignore_3D=False)(self.mol)
+        #     feature_vals = calc.values()
+        else:
+            logging.error(f"Feature {feature} not available, choose one from {list(self.features.keys())}")
 
         feature_dict = dict(zip(self.AVAILABLE_FEATURES[feature], feature_vals))
 

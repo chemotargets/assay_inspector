@@ -189,7 +189,7 @@ class MoleculeData():
                 self.NAME_MOLOBJ : (lambda x: list(set(x))[0]),
                 self.NAME_SMILES_RAW : (lambda x: tuple(x)),  # TODO: there could be multiple smiles here
                 self.NAME_SMILES_STD : (lambda x: list(set(x))[0]),
-                self.NAME_REF : (lambda x: ", ".join(set(x).difference({np.NaN}))),
+                self.NAME_REF : (lambda x: ", ".join(set(x).difference({np.nan}))),
             }
             # all columns that are in the original dataframe and not have a specific funcion assigned for deduplication are saved as a tuple
             def unique_tuple(x):
@@ -222,7 +222,7 @@ class MoleculeData():
                 if col in self._dataframe.columns:
                     self._dataframe[col] = self._dataframe[col].apply(lambda x: tuple([x]))
         # if some columns are converted to single-item tuples, explode them
-        single_item_columns = [col for col in self._dataframe.columns if all(self._dataframe[col].apply(lambda x: len(x) if isinstance(x, tuple) else np.NaN)==1)]
+        single_item_columns = [col for col in self._dataframe.columns if all(self._dataframe[col].apply(lambda x: len(x) if isinstance(x, tuple) else np.nan)==1)]
         if single_item_columns:
             self._dataframe = self._dataframe.explode(column=single_item_columns)
 

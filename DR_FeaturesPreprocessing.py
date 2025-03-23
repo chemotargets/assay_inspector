@@ -120,13 +120,12 @@ class FeaturesPreprocessing():
 
     def _get_scaler(self):
         if self.__scaler is None:
-            match SCALER_TYPE:
-                case "minmax":
-                    self.__scaler = MinMaxScaler()
-                case "standard":
-                    self.__scaler = StandardScaler()
-                case "robust":
+            if SCALER_TYPE == "minmax":
+                self.__scaler = MinMaxScaler()
+            elif SCALER_TYPE == "standard":
+                self.__scaler = StandardScaler()
+            elif SCALER_TYPE == "robust":
                     self.__scaler = RobustScaler()
-                case _:
-                    logging.error(f"Scaler '{SCALER_TYPE}' not available")
+            else:
+                logging.error(f"Scaler '{SCALER_TYPE}' not available")
         return self.__scaler

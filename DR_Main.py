@@ -11,25 +11,28 @@ __deprecated__ = False
 
 ### Imports
 
-from DR_DataLoading import *
-from DR_Calculation import *
-from DR_Visualization import *
-from DR_OutputFile import *
-from DR_ExpertAssessment import *
+from DR_DataLoading import DataLoading
+from DR_Calculation import Calculation
+from DR_OutputFile import OutputFile
+from DR_Visualization import Visualization
+from DR_ExpertAssessment import ExpertAssessment
 
 from DR_MoleculeData import MoleculeData
 from DR_MoleculeInfo import MoleculeInfo
 
 from DR_Utils import logging
 
-import datetime
+import pandas as pd
 import seaborn as sns
+from datetime import datetime
 
+### Configs
 import os
 import json
 
-### Configs
-with open("configs.json", "r") as file:
+config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'configs.json')
+
+with open(config_path, "r") as file:
     config = json.load(file)
 
 ###
@@ -84,6 +87,11 @@ class DataReporting():
         NOTE: Behavior varies depending on the task type (classification or regression).
         """
 
+        self.__dataloading = DataLoading(mainSelf=self)
+        self.__calculation = Calculation(mainSelf=self)
+        self.__outputfile = OutputFile(mainSelf=self)
+        self.__visualization = Visualization(mainSelf=self)
+
         # Load data
         if not os.path.exists(self.data_path):
             logging.error(f"The file {self.data_path} does not exist")
@@ -91,7 +99,7 @@ class DataReporting():
         data_instance = MoleculeData(source=self.data_path)
 
         # Generate the DataFrame of molecule feature profiles
-        data = self.__getMoleculeProfileDataframe(data_instance, reporting='individual')
+        data = self.__dataloading.getMoleculeProfileDataframe(data_instance, reporting='individual')
 
         if self.reference_set is not None:
             # Load reference set data
@@ -101,7 +109,7 @@ class DataReporting():
             ref_instance = MoleculeData(source=self.reference_set)
 
             # Generate the InChIKey set of reference molecules
-            ref_inchikeys = self.__getInChIKeySet(ref_instance)
+            ref_inchikeys = self.__dataloading.getInChIKeySet(ref_instance)
 
         # Check data type of the endpoint
         if self.task == config["TASK_CLASSIFICATION"]:
@@ -114,23 +122,23 @@ class DataReporting():
                 logging.error(f"The data type of the endpoint value is not numeric but {data[config['NAMES']['VALUE']].dtype}")
 
         # Count the number of molecules
-        n_mols = self.__getNmols(data)
+        n_mols = self.__calculation.getNmols(data)
 
         # Compute endpoint distribution statistics
-        statistics = self.__calculateEndpointStatistics(data)
+        statistics = self.__calculation.calculateEndpointStatistics(data)
 
         if self.reference_set is not None:
             # Calculate the percentage of reference molecules
-            prop_ref_mols = self.__calculatePropRefMols(data, ref_inchikeys)
+            prop_ref_mols = self.__calculation.calculatePropRefMols(data, ref_inchikeys)
 
         outliers_set = None
         if self.task == config["TASK_REGRESSION"]:
             # Compute skewness and kurtosis
-            skewness = self.__calculateSkewness(data)
-            kurtosis_df = self.__calculateKurtosis(data)
+            skewness = self.__calculation.calculateSkewness(data)
+            kurtosis_df = self.__calculation.calculateKurtosis(data)
             # Identify outliers and out-of-range (OOR) data points
-            outliers_info, outliers_set = self.__identifyOutliers(data)
-            oor_data = self.__identifyOORDataPoints(data)
+            outliers_info, outliers_set = self.__calculation.identifyOutliers(data)
+            oor_data = self.__calculation.identifyOORDataPoints(data)
        
         # Create the main directory and the endpoint subdirectory
         if not os.path.exists(self.directory):
@@ -139,7 +147,7 @@ class DataReporting():
             os.makedirs(os.path.join(self.directory, self.endpoint_name))
 
         # Generate the final DataFrame and save it into a TSV file
-        logging.info(oriMessage= f"Creating report on {self.endpoint_name} individual dataset")
+        logging.info(f"Creating report on {self.endpoint_name} individual dataset")
 
         if self.task == config["TASK_CLASSIFICATION"]:
             summary_df = pd.DataFrame(data=[[self.endpoint_name , 'entire_dataset'] + n_mols + statistics],
@@ -149,31 +157,35 @@ class DataReporting():
                                       columns=[config["NAMES"]["ENDPOINT_ID"],'dataset','num_mols','mean','standard_deviation','minimum','1st_quartile','median','3rd_quartile','maximum',
                                               'skewness_value','skewness_statistic','skewness_pvalue','kurtosis_value','kurtosis_statistic','kurtosis_pvalue','n_outliers_Zscore','prop_outliers_Zscore',
                                               'n_abnormals_Zscore','prop_abnormals_Zscore','n_outliers_IQR','prop_outliers_IQR','n_upper_oor','n_lower_oor'])
+            if self.upper_bound is None:
+                summary_df = summary_df.drop(columns=['n_upper_oor'])
+            if self.lower_bound is None:
+                summary_df = summary_df.drop(columns=['n_lower_oor'])
             
         if self.reference_set is not None:
             summary_df = pd.merge(summary_df, pd.DataFrame(data=[['entire_dataset']+prop_ref_mols], columns=['dataset','num_ref_mols','prop_ref_mols']), on='dataset', how='left')
         
-        self.__writeToTSV(summary_df)
+        self.__outputfile.writeToTSV(summary_df)
 
        
         if self.task == config["TASK_REGRESSION"]:
             # Visualize outliers
-            self.__VisualizeOutliers(data, outliers_set)
+            self.__visualization.VisualizeOutliers(data, outliers_set)
 
         # Plot the endpoint distribution
-        self.__plotEndpointDistribution(data, outliers_set)
+        self.__visualization.plotEndpointDistribution(data, outliers_set)
 
         # Compute the distance matirx and Plot the similarity distribution
-        distance_matrix = self.__calculateDistanceMatrix(data)
-        self.__plotSimilarityDistribution(distance_matrix)
+        distance_matrix = self.__calculation.calculateDistanceMatrix(data)
+        self.__visualization.plotSimilarityDistribution(distance_matrix)
 
         # Run UMAP and Visualize the feature space
-        projection = self.__runUMAP(data)
-        self.x_range, self.y_range = self.__getAxisRanges(projection)
-        self.__plotFeatureSpace_coloredbyEndpoint(projection, data)
-        self.__plotFeatureSpace_Hexbin(projection)    
+        projection = self.__calculation.runUMAP(data)
+        self.x_range, self.y_range = self.__visualization.getAxisRanges(projection)
+        self.__visualization.plotFeatureSpace_coloredbyEndpoint(projection, data)
+        self.__visualization.plotFeatureSpace_Hexbin(projection)    
 
-        logging.info(oriMessage= f"The final report and several plots have been saved in the {self.directory+'/'+self.endpoint_name} directory")
+        logging.info(f"The final report and several plots have been saved in the {self.directory+'/'+self.endpoint_name} directory")
 
     ### 
     def get_comparative_reporting(self):
@@ -188,6 +200,12 @@ class DataReporting():
         NOTE: Behavior varies depending on the task type (classification or regression).
         """
 
+        self.__dataloading = DataLoading(mainSelf=self)
+        self.__calculation = Calculation(mainSelf=self)
+        self.__outputfile = OutputFile(mainSelf=self)
+        self.__visualization = Visualization(mainSelf=self)
+        self.__expertassessment = ExpertAssessment(mainSelf=self)
+
         # Load data
         if not os.path.exists(self.data_path):
             logging.error(f"The file {self.data_path} does not exist")
@@ -195,8 +213,8 @@ class DataReporting():
         data_instance = MoleculeData(source=self.data_path)
 
         # Generate the DataFrame of molecule feature profiles
-        data = self.__getMoleculeProfileDataframe(data_instance, reporting='comparative')
-        
+        data = self.__dataloading.getMoleculeProfileDataframe(data_instance, reporting='comparative')
+
         if self.reference_set is not None:
             # Load reference set data
             if not os.path.exists(self.reference_set):
@@ -205,7 +223,7 @@ class DataReporting():
             ref_instance = MoleculeData(source=self.reference_set)
 
             # Generate the InChIKey set of reference molecules
-            ref_inchikeys = self.__getInChIKeySet(ref_instance)
+            ref_inchikeys = self.__dataloading.getInChIKeySet(ref_instance)
 
         # Check data type of the endpoint value
         if self.task == config["TASK_CLASSIFICATION"]:
@@ -228,56 +246,53 @@ class DataReporting():
             return
 
         # Count the total number of molecules
-        n_mols_total = self.__getNmols(data)
+        n_mols_total = self.__calculation.getNmols(data)
 
         # Count the number of molecules per data source
-        n_mols_sources = self.__getNmols_perDataset(data)
+        n_mols_sources = self.__calculation.getNmols_perDataset(data)
 
         # Compute endpoint distribution statistics on the entire dataset
-        statistics_entire_dataset = self.__calculateEndpointStatistics(data)
+        statistics_entire_dataset = self.__calculation.calculateEndpointStatistics(data)
 
         # Compute endpoint distribution statistics per data source
-        statistics_sources = self.__calculateEndpointStatistics_perDataset(data)
+        statistics_sources = self.__calculation.calculateEndpointStatistics_perDataset(data)
 
         if self.reference_set is not None:
             # Calculate the total percentage of reference molecules
-            prop_ref_mols_total = self.__calculatePropRefMols(data, ref_inchikeys)
+            prop_ref_mols_total = self.__calculation.calculatePropRefMols(data, ref_inchikeys)
 
             # Calculate the percentage of reference molecules per data source
-            prop_ref_mols_sources= self.__calculatePropRefMols_perDataset(data, ref_inchikeys)
+            prop_ref_mols_sources= self.__calculation.calculatePropRefMols_perDataset(data, ref_inchikeys)
 
         else: 
             prop_ref_mols_total = prop_ref_mols_sources = None
 
         if self.task == config["TASK_REGRESSION"]:
             # Compute skewness and kurtosis on the entire dataset
-            skewness_entire_dataset = self.__calculateSkewness(data)
-            kurtosis_entire_dataset = self.__calculateKurtosis(data)
+            skewness_entire_dataset = self.__calculation.calculateSkewness(data)
+            kurtosis_entire_dataset = self.__calculation.calculateKurtosis(data)
             # Identify outliers and OOR data points on the entire dataset
-            outliers_info_entire_dataset, outliers_set_entire_dataset = self.__identifyOutliers(data)
-            oor_entire_dataset = self.__identifyOORDataPoints(data)
+            outliers_info_entire_dataset, outliers_set_entire_dataset = self.__calculation.identifyOutliers(data)
+            oor_entire_dataset = self.__calculation.identifyOORDataPoints(data)
 
             # Compute skewness and kurtosis per data sources
-            skewness_sources = self.__calculateSkewness_perDataset(data)
-            kurtosis_sources = self.__calculateKurtosis_perDataset(data)
+            skewness_sources = self.__calculation.calculateSkewness_perDataset(data)
+            kurtosis_sources = self.__calculation.calculateKurtosis_perDataset(data)
             # Identify outliers and OOR data points per data source
-            outliers_info_sources, outliers_set_sources = self.__identifyOutliers_perDataset(data)
-            oor_sources = self.__identifyOORDataPoints_perDataset(data)
+            outliers_info_sources, outliers_set_sources = self.__calculation.identifyOutliers_perDataset(data)
+            oor_sources = self.__calculation.identifyOORDataPoints_perDataset(data)
 
         else: 
             skewness_entire_dataset = kurtosis_entire_dataset = outliers_info_entire_dataset = outliers_set_entire_dataset = oor_entire_dataset = None
             skewness_sources = kurtosis_sources = outliers_info_sources = outliers_set_sources = oor_sources = None
 
         # Compare statistically the endpoint distribution across data sources
-        endpoint_distribution_results = self.__compareEndpointDistribution_acrossDatasets(data)
-
-        # Perform Pairwise KS Test
-        ks_results = self.__perfromPairwiseKSTest(data)
+        endpoint_distribution_results = self.__calculation.compareEndpointDistribution_acrossDatasets(data)
 
         # Compute the distance matirx and get the within- and betwen-source distances per data source
-        distance_matrix = self.__calculateDistanceMatrix(data)
-        feature_similarity_results = self.__calculateFeatureSimilarity(distance_matrix, data)
-        feature_similarity_pairwise_results = self.__calculateFeatureSimilarityPairwise(distance_matrix, data)
+        distance_matrix = self.__calculation.calculateDistanceMatrix(data)
+        feature_similarity_results = self.__calculation.calculateFeatureSimilarity(distance_matrix, data)
+        feature_similarity_pairwise_results = self.__calculation.calculateFeatureSimilarity_Pairwise(distance_matrix, data)
 
         # Create the main directory and the endpoint subdirectory
         if not os.path.exists(self.directory):
@@ -288,54 +303,56 @@ class DataReporting():
         # Generate the final DataFrame and save it into a TSV file
         logging.info(f"Creating comparative report on {self.endpoint_name} aggregated dataset")
 
-        summary_df = self.__getSummaryDataFrame(n_mols_total, n_mols_sources, statistics_entire_dataset, statistics_sources, prop_ref_mols_total, prop_ref_mols_sources, 
-                                                skewness_entire_dataset, skewness_sources, kurtosis_entire_dataset, kurtosis_sources, outliers_info_entire_dataset, 
-                                                outliers_info_sources, oor_entire_dataset, oor_sources, endpoint_distribution_results, feature_similarity_results)
-        self.__writeToTSV(summary_df)
+        summary_df = self.__outputfile.getSummaryDataFrame(n_mols_total, n_mols_sources, statistics_entire_dataset, statistics_sources, prop_ref_mols_total, prop_ref_mols_sources, 
+                                                           skewness_entire_dataset, skewness_sources, kurtosis_entire_dataset, kurtosis_sources, outliers_info_entire_dataset, 
+                                                           outliers_info_sources, oor_entire_dataset, oor_sources, endpoint_distribution_results, feature_similarity_results)
+        self.__outputfile.writeToTSV(summary_df)
 
         if self.task == config["TASK_REGRESSION"]:
             # Visualize outliers
-            self.__VisualizeOutliers(data, outliers_set_entire_dataset) 
+            self.__visualization.VisualizeOutliers(data, outliers_set_entire_dataset) 
 
         # Plot the intersection across data sources
-        self.__plotDatasetsIntersection(data)
+        self.__visualization.plotDatasetsIntersection(data)
 
         # Plot the endpoint distribution
-        self.__plotEndpointDistribution(data, outliers_set_entire_dataset)
+        self.__visualization.plotEndpointDistribution(data, outliers_set_entire_dataset)
 
         # Plot the endpoint distribution for each data source
-        self.__plotEndpointDistributionComparison(data, outliers_set_sources)
+        self.__visualization.plotEndpointDistributionComparison(data, outliers_set_sources)
 
         if self.reference_set is not None:
             # Plot the endpoint distribution for reference vs. non-reference molecules for each data source
-            self.__plotEndpointDistributionComparison_RefVsNonRefMols(data, ref_inchikeys)
+            self.__visualization.plotEndpointDistributionComparison_RefVsNonRefMols(data, ref_inchikeys)
 
         # Inspect the discrepancies between data sources and Plot the comparative heatmaps
-        discrepancies_df = self.__calculateInterDatasetDiscrepancies(data)
-        self.__plotComparativeHeatmaps(discrepancies_df)
-    
-        # Plot KS test results in a heatmap
-        self.__plotPairwiseKSTestHeatmap(ks_results)
+        discrepancies_df = self.__calculation.calculateInterDatasetDiscrepancies(data)
+        self.__visualization.plotComparativeHeatmaps(discrepancies_df)
+
+        if self.task == config["TASK_REGRESSION"]:
+            # Perform Pairwise KS test and Plot the test results in a heatmap
+            ks_results = self.__calculation.perfromPairwiseKSTest(data)
+            self.__visualization.plotPairwiseKSTestHeatmap(ks_results)
 
         # Plot the similarity distribution
-        self.__plotSimilarityDistribution(distance_matrix)
-        self.__plotFeatureSimilarityHeatmap(feature_similarity_pairwise_results)
+        self.__visualization.plotSimilarityDistribution(distance_matrix)
+        self.__visualization.plotFeatureSimilarityHeatmap(feature_similarity_pairwise_results)
 
         # Run UMAP and Visualize the feature space
-        projection = self.__runUMAP(data)
-        self.x_range, self.y_range = self.__getAxisRanges(projection)
-        self.__plotFeatureSpace_coloredbyEndpoint(projection, data)
-        self.__plotFeatureSpace_coloredbyDataset(projection, data)
-        self.__plotFeatureSpace_KDEplot(projection, data)
-        self.__plotFeatureSpace_Hexbin(projection)    
+        projection = self.__calculation.runUMAP(data)
+        self.x_range, self.y_range = self.__visualization.getAxisRanges(projection)
+        self.__visualization.plotFeatureSpace_coloredbyEndpoint(projection, data)
+        self.__visualization.plotFeatureSpace_coloredbyDataset(projection, data)
+        self.__visualization.plotFeatureSpace_KDEplot(projection, data)
+        self.__visualization.plotFeatureSpace_Hexbin(projection)    
 
         # Generate the final expert assessment
-        self.__generateExpertAssessment(data, skewness_sources, outliers_info_sources, oor_sources, feature_similarity_results, 
-                                        endpoint_distribution_results, discrepancies_df, prop_ref_mols_sources)
-
+        self.__expertassessment.generateExpertAssessment(data, skewness_sources, outliers_info_sources, oor_sources, feature_similarity_results, 
+                                                         endpoint_distribution_results, discrepancies_df, prop_ref_mols_sources)
+    
         logging.info(f"The final report and several plots have been saved in the {os.path.join(self.directory, self.endpoint_name)} directory")
 
-        self.__generateOutputSummary(summary_df)
+        self.__outputfile.generateOutputSummary(summary_df)
 
     ###
     @property
