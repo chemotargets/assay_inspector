@@ -26,6 +26,11 @@ import pandas as pd
 import seaborn as sns
 from datetime import datetime
 
+### Warnings
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+
 ### Configs
 import os
 import json
