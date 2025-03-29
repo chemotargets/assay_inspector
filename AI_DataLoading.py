@@ -11,7 +11,7 @@ __deprecated__ = False
 
 ### Imports
 
-from DR_FeaturesPreprocessing import FeaturesPreprocessing
+from AI_FeaturesPreprocessing import FeaturesPreprocessing
 
 ### Configs
 import os

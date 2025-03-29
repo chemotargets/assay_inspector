@@ -11,7 +11,7 @@ __deprecated__ = False
 
 from rdkit import Chem
 
-from DR_Utils import logging, standardize
+from AI_Utils import logging, standardize
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 from rdkit.ML.Descriptors import MoleculeDescriptors

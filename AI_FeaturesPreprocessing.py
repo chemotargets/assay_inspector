@@ -11,7 +11,7 @@ __deprecated__ = False
 
 import numpy as np
 
-from DR_Utils import logging
+from AI_Utils import logging
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from sklearn.impute import SimpleImputer, KNNImputer

@@ -13,7 +13,7 @@ __deprecated__ = False
 import pandas as pd
 import numpy as np
 
-from DR_Utils import classify_skewness, formatWarningTitle
+from AI_Utils import classify_skewness, formatWarningTitle
 
 ### Configs
 import os
@@ -24,9 +24,9 @@ config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'configs.
 with open(config_path, "r") as file:
     config = json.load(file)
 
-class ExpertAssessment():
+class InsightReport():
     """
-    Class to generate the expert assessment file containig several warnings and recommendations
+    Class to generate the insight report file containig several warnings and recommendations
     to guide the data integration process.
     """
 
@@ -263,7 +263,7 @@ class ExpertAssessment():
                     divergent_sources_df, redundant_sources_df, underrepresented_sources_df):
         
         """
-        Generates a TXT file with the expert assessment results.
+        Generates a TXT file with the insight report results.
         """
 
         # Endpoint type specifications    
@@ -274,9 +274,9 @@ class ExpertAssessment():
             diff_col = 'mean_abs_diff'
             diff_name = 'Mean Absolute Difference'
 
-        with open(self.__mainSelf.directory+'/'+self.__mainSelf.endpoint_name+'/expert_assessment.txt','w') as f:
+        with open(self.__mainSelf.directory+'/'+self.__mainSelf.endpoint_name+'/insight_report.txt','w') as f:
             f.write('###########################################################################\n')
-            f.write('########################### EXPERT ASSESSMENT #############################\n')
+            f.write('############################# INSIGHT REPORT ##############################\n')
             f.write('###########################################################################\n')
 
             if self.__mainSelf.task == config["TASK_REGRESSION"]:
@@ -407,11 +407,11 @@ class ExpertAssessment():
                     f.write(f'No data source has a low proportion of reference molecules (less than 15%).\n')
 
     ###
-    def generateExpertAssessment(self, data_df, skewness_results, outliers_results, oor_results, 
+    def generateInsightReport(self, data_df, skewness_results, outliers_results, oor_results, 
                                 feature_similarity_results, endpoint_distribution_results, discrepancies_df, ref_mols_results):
     
         """
-        Conducts a final expert assessment to identify individual datasets:
+        Conducts a final insight report to identify individual datasets:
         - with an endpoint distribution significantly differing from the rest (only for regression endpoints).
         - with an inconsistent endpoint value range (only for regression endpoints).
         - with a skewed endpoint distribution (only for regression endpoints).

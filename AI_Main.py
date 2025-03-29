@@ -11,16 +11,16 @@ __deprecated__ = False
 
 ### Imports
 
-from DR_DataLoading import DataLoading
-from DR_Calculation import Calculation
-from DR_OutputFile import OutputFile
-from DR_Visualization import Visualization
-from DR_ExpertAssessment import ExpertAssessment
+from AI_DataLoading import DataLoading
+from AI_Calculation import Calculation
+from AI_OutputFile import OutputFile
+from AI_Visualization import Visualization
+from AI_InsightReport import InsightReport
 
-from DR_MoleculeData import MoleculeData
-from DR_MoleculeInfo import MoleculeInfo
+from AI_MoleculeData import MoleculeData
+from AI_MoleculeInfo import MoleculeInfo
 
-from DR_Utils import logging
+from AI_Utils import logging
 
 import pandas as pd
 import seaborn as sns
@@ -41,7 +41,7 @@ with open(config_path, "r") as file:
     config = json.load(file)
 
 ###
-class DataReporting():
+class AssayInspector():
 
     """
     Class to generate the reporting of individual and aggregated datasets build from multiple
@@ -74,7 +74,7 @@ class DataReporting():
         features_dict = {'rdkit':MoleculeInfo.FEAT_RDKIT_DESC, 'ecfp4':MoleculeInfo.FEAT_ECFP4}
         self.features = features_dict[self.feature_type]
 
-        self.directory = 'DataReporting_'+datetime.now().strftime("%Y%m%d")
+        self.directory = 'AssayInspector_'+datetime.now().strftime("%Y%m%d")
 
         # Define the color palette 
         color_palette = sns.color_palette('colorblind')
@@ -199,8 +199,8 @@ class DataReporting():
         Generates a report for an aggregated dataset build from multiple sources.
 
         It loads the input data, compute various statistics, and generates multiple plots for
-        analysis. It then creates an output file summarizing the key information and an expert
-        assessment file with alerts to guide data cleaning and preprocessing. 
+        analysis. It then creates an output file summarizing the key information and an insight
+        report file with alerts to guide data cleaning and preprocessing. 
         
         NOTE: Behavior varies depending on the task type (classification or regression).
         """
@@ -209,7 +209,7 @@ class DataReporting():
         self.__calculation = Calculation(mainSelf=self)
         self.__outputfile = OutputFile(mainSelf=self)
         self.__visualization = Visualization(mainSelf=self)
-        self.__expertassessment = ExpertAssessment(mainSelf=self)
+        self.__insightreport = InsightReport(mainSelf=self)
 
         # Load data
         if not os.path.exists(self.data_path):
@@ -351,8 +351,8 @@ class DataReporting():
         self.__visualization.plotFeatureSpace_KDEplot(projection, data)
         self.__visualization.plotFeatureSpace_Hexbin(projection)    
 
-        # Generate the final expert assessment
-        self.__expertassessment.generateExpertAssessment(data, skewness_sources, outliers_info_sources, oor_sources, feature_similarity_results, 
+        # Generate the final insight report
+        self.__insightreport.generateInsightReport(data, skewness_sources, outliers_info_sources, oor_sources, feature_similarity_results, 
                                                          endpoint_distribution_results, discrepancies_df, prop_ref_mols_sources)
     
         logging.info(f"The final report and several plots have been saved in the {os.path.join(self.directory, self.endpoint_name)} directory")
