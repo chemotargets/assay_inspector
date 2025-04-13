@@ -4,5 +4,6 @@ test_scripts/logging.log
 data
 raw_data
 results
+results_scaled
 __pycache__
 tmp
