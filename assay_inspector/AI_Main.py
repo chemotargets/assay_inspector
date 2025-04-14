@@ -52,8 +52,8 @@ class AssayInspector():
     ### Define constants
 
     ###
-    def __init__(self, data_path, endpoint_name, task, feature_type, outliers_method='zscore',
-                 reference_set=None, lower_bound=None, upper_bound=None):
+    def __init__(self, data_path, endpoint_name, task, feature_type, outliers_method='zscore', distance_metric='euclidean', 
+                 descriptors_df=None, reference_set=None, lower_bound=None, upper_bound=None):
 
         """
         Class constructor. Requires input data.
@@ -65,14 +65,19 @@ class AssayInspector():
         self.feature_type = feature_type
 
         self.outliers_method = outliers_method
+        self.distance_metric = distance_metric
 
+        self.descriptors_df = descriptors_df
         self.reference_set = reference_set
 
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-        features_dict = {'rdkit':MoleculeInfo.FEAT_RDKIT_DESC, 'ecfp4':MoleculeInfo.FEAT_ECFP4}
-        self.features = features_dict[self.feature_type]
+        if self.feature_type in ['rdkit', 'ecfp4']:
+            features_dict = {'rdkit':MoleculeInfo.FEAT_RDKIT_DESC, 'ecfp4':MoleculeInfo.FEAT_ECFP4}
+            self.features = features_dict[self.feature_type]
+        elif self.feature_type == 'custom':
+            self.features = self.descriptors_df
 
         self.directory = 'AssayInspector_'+datetime.now().strftime("%Y%m%d")
 

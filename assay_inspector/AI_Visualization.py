@@ -798,12 +798,15 @@ class Visualization():
         """
         
         # Feature type specifications
-        if self.__mainSelf.feature_type == 'rdkit':
+        if self.__mainSelf.feature_type in ['rdkit']:
             distance_metric = 'Standardized Euclidean distance'
             xrange = [distance_matrix.min(), distance_matrix.max()]
-        elif self.__mainSelf.feature_type == 'ecfp4':
+        elif self.__mainSelf.feature_type in ['ecfp4']:
             distance_metric = 'Jaccard distance'
             xrange = [0, 1]
+        elif self.__mainSelf.feature_type in ['custom']:
+            distance_metric = f'{self.__mainSelf.distance_metric.capitalize()} distance'
+            xrange = [distance_matrix.min(), distance_matrix.max()]
 
         # Randomly sample 10,000 molecular distances
         if (distance_matrix.shape[0] * (distance_matrix.shape[0] - 1) // 2) > 10000:
@@ -835,9 +838,9 @@ class Visualization():
         """
 
         # Feature type specifications
-        if self.__mainSelf.feature_type == 'rdkit':
-            zmax = similarity_results['average_between_similarity'].max()
-        elif self.__mainSelf.feature_type == 'ecfp4':
+        if self.__mainSelf.feature_type in ['rdkit','custom']:
+            zmax = similarity_results['mean_inter_similarity'].max()
+        elif self.__mainSelf.feature_type in ['ecfp4']:
             zmax = 1
 
         # Create the pivot table for the heatmap 

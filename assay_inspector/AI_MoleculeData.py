@@ -319,9 +319,10 @@ class MoleculeData():
         elif isinstance(feature, pd.DataFrame):
             feature_df = feature.copy()
             feature = "CUSTOM"
-            feature_columns = [f"{feature}_{col}" for col in feature_df.columns if col != self.NAME_ID]
-            feature_df.columns = [self.NAME_ID] + feature_columns
+            feature_columns = [f"{feature}_{col}" if col != self.NAME_ID else self.NAME_ID for col in feature_df.columns]
+            feature_df.columns = feature_columns
             self._dataframe = self._dataframe.merge(feature_df, on=self.NAME_ID)
+            feature_columns.remove(self.NAME_ID)
         else:
             logging.error(f"Feature {feature} format not recognized")
 

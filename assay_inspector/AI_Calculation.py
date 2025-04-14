@@ -360,15 +360,17 @@ class Calculation():
         """
 
         # Compute the distance matrix
-        if self.__mainSelf.feature_type == 'rdkit': 
+        if self.__mainSelf.feature_type in ['rdkit']: 
             variances = np.var(data_df.loc[:, [f'{self.__mainSelf.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.__mainSelf.features]]].to_numpy(), axis=0, ddof=1) # compute feature variances
             variances[variances == 0] = 1e-8 # replace zero variances with a small positive value to avoid division by zero
             distance_matrix = pairwise_distances(data_df.loc[:, [f'{self.__mainSelf.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.__mainSelf.features]]].to_numpy(), metric='seuclidean', V=variances)
 
-        elif self.__mainSelf.feature_type == 'ecfp4': 
+        elif self.__mainSelf.feature_type in ['ecfp4']: 
             indices = pairwise_distances(data_df.loc[:, [f'{self.__mainSelf.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.__mainSelf.features]]].to_numpy(dtype=bool), metric='jaccard') 
             distance_matrix = 1 - indices
 
+        elif self.__mainSelf.feature_type == 'custom': 
+            distance_matrix = pairwise_distances(data_df.loc[:, [col for col in data_df.columns if col.startswith(self.__mainSelf.feature_type.upper())]].to_numpy(), metric=self.__mainSelf.distance_metric) 
         return distance_matrix
 
     ### 
@@ -443,13 +445,22 @@ class Calculation():
         """
 
         # Run UMAP
-        if self.__mainSelf.feature_type == 'rdkit':
-            umap = UMAP(n_components=2, init='random', metric='seuclidean', random_state=config["RANDOM_SEED"], n_jobs=1)
+        if self.__mainSelf.feature_type in ['rdkit']:
+            variances = np.var(data_df.loc[:, [f'{self.__mainSelf.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.__mainSelf.features]]].to_numpy(), axis=0, ddof=1) # compute feature variances
+            variances[variances == 0] = 1e-8 # replace zero variances with a small positive value to avoid division by zero
+            umap = UMAP(n_components=2, init='random', metric='seuclidean', metric_kwds={'V': variances}, random_state=config["RANDOM_SEED"], n_jobs=1)
         
-        elif self.__mainSelf.feature_type == 'ecfp4':
+        elif self.__mainSelf.feature_type in ['ecfp4']:
             umap = UMAP(n_components=2, init='random', metric='jaccard', random_state=config["RANDOM_SEED"], n_jobs=1)
 
-        proj = umap.fit_transform(data_df.loc[:, [f'{self.__mainSelf.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.__mainSelf.features]]])
+        elif self.__mainSelf.feature_type == 'custom':
+            umap = UMAP(n_components=2, init='random', metric=self.__mainSelf.distance_metric, random_state=config["RANDOM_SEED"], n_jobs=1)
+
+        if self.__mainSelf.feature_type in ['rdkit','ecfp4']:
+            proj = umap.fit_transform(data_df.loc[:, [f'{self.__mainSelf.features}_{feature}' for feature in MoleculeInfo.AVAILABLE_FEATURES[self.__mainSelf.features]]])
+        elif self.__mainSelf.feature_type in ['custom']:
+            proj = umap.fit_transform(data_df.loc[:, [col for col in data_df.columns if col.startswith(self.__mainSelf.feature_type.upper())]])
+
         return proj
 
     ###

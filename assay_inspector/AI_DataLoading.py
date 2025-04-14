@@ -36,8 +36,7 @@ class DataLoading():
 
         """
         Generates the DataFrame containing the feature profiles of the molecules. 
-        """
-
+        """        
         # Deduplicate the dataset 
         if reporting == 'individual':
             data._deduplicate(subset=[config["NAMES"]["INCHIKEY"]], endpoint2task={self.__mainSelf.endpoint_name:self.__mainSelf.task})
@@ -47,13 +46,18 @@ class DataLoading():
         # Select the data corresponding to the given endpoint
         data = data.splitBy(config["NAMES"]["ENDPOINT_ID"])[self.__mainSelf.endpoint_name]
 
+        if self.__mainSelf.feature_type == 'custom':
+            if not data.NAME_ID in self.__mainSelf.features.columns:
+                self.__mainSelf.features[data.NAME_ID] = data.DataFrame()[data.NAME_ID]
+
         # Perform feature preprocessing
         preprocessing = FeaturesPreprocessing()
         data = preprocessing.fit_transform(data, features_ids=[self.__mainSelf.features], endpoint2task={self.__mainSelf.endpoint_name:self.__mainSelf.task})
 
         # Get the molecule DataFrame
-        data_df = data.DataFrame(features=[self.__mainSelf.features],
-                                    columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"], config["NAMES"]["REF"], config["NAMES"]["ENDPOINT_ID"]])
+        # data_df = data.DataFrame(features=data.featuresInDF_list,
+        #                          columns=[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"], config["NAMES"]["REF"], config["NAMES"]["ENDPOINT_ID"]])
+        data_df = data.DataFrame()[[config["NAMES"]["INCHIKEY"], config["NAMES"]["VALUE"], config["NAMES"]["REF"], config["NAMES"]["ENDPOINT_ID"]]+[col for col in data.DataFrame().columns for feat in data.featuresInDF_list if col.startswith(feat)]]
 
         return data_df
 
