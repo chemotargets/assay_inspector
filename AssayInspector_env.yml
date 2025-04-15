@@ -1,4 +1,4 @@
-name: data_reporting
+name: assay_inspector
 channels:
   - mcs07
   - plotly
@@ -268,6 +268,4 @@ dependencies:
   - zipp=3.21.0=pyhd8ed1ab_1
   - zstandard=0.23.0=py39h08a7858_1
   - zstd=1.5.6=ha6fb4c9_0
-  - pip:
-      - hpsklearn==1.0.3
 prefix: /home/ubuntu/.conda/envs/data_reporting
