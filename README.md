@@ -1,11 +1,13 @@
 <div align="center">
-  <h2>
+  <h1>
     Data consistency assessment facilitates transfer learning in ADME modeling
-  </h2>
+  </h1>
 </div>
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/chemotargets/assay_inspector/main/AssayInspector.png", alt="AssayInspector", width=60%>
+	<div style="background-color: white; display: inline-block; padding: 10px; border-radius: 10px; width:60vw">
+		<img src="https://github.com/chemotargets/assay_inspector/blob/master/AssayInspector.png?raw=true" alt="AssayInspector">
+	</div>
 </div>
 
 &nbsp;
