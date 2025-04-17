@@ -78,6 +78,8 @@ class AssayInspector():
             self.features = features_dict[self.feature_type]
         elif self.feature_type == 'custom':
             self.features = self.descriptors_df
+        else:
+            logging.error(f"Feature type '{self.feature_type}' not implemented")
 
         self.directory = 'AssayInspector_'+datetime.now().strftime("%Y%m%d")
 
