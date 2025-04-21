@@ -321,8 +321,13 @@ class MoleculeData():
             feature = "CUSTOM"
             feature_columns = [f"{feature}_{col}" if col != self.NAME_ID else self.NAME_ID for col in feature_df.columns]
             feature_df.columns = feature_columns
-            self._dataframe = self._dataframe.merge(feature_df, on=self.NAME_ID)
-            feature_columns.remove(self.NAME_ID)
+            if self.NAME_ID in feature_columns:
+                feature_columns.remove(self.NAME_ID)
+            else:
+                feature_df[self.NAME_ID] = self._dataframe[self.NAME_ID].explode().values
+            feature_df = feature_df.set_index(self.NAME_ID).loc[self._dataframe[self.NAME_ID].apply(lambda l: l[0]).values].set_index(self._dataframe[self.NAME_ID]).reset_index()
+            self._dataframe = self._dataframe.merge(feature_df, on=self.NAME_ID, suffixes=("_to_drop", ""), how="left")
+            self._dataframe = self._dataframe.drop(columns=[col for col in self._dataframe if col.endswith("_to_drop")])
         else:
             logging.error(f"Feature {feature} format not recognized")
 

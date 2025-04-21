@@ -34,7 +34,15 @@ DATETIME_TAG = f"{DATE_TAG}_{TIME_TAG}"
 
 import logging
 PROCESS_LOG_FILE = "logging.log"
-logging.basicConfig(filename=PROCESS_LOG_FILE, filemode="a", level=logging.INFO, format="%(asctime)s # %(levelname)s # %(message)s", datefmt="%d/%m/%Y %H:%M:%S")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s # %(levelname)s # %(message)s",
+    datefmt="%d/%m/%Y %H:%M:%S",
+    handlers=[
+        logging.FileHandler(filename=PROCESS_LOG_FILE, mode="a"),
+        logging.StreamHandler()
+    ]
+)
 
 from rdkit import RDLogger
 from contextlib import contextmanager

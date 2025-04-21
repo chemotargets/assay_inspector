@@ -46,10 +46,6 @@ class DataLoading():
         # Select the data corresponding to the given endpoint
         data = data.splitBy(config["NAMES"]["ENDPOINT_ID"])[self.__mainSelf.endpoint_name]
 
-        if self.__mainSelf.feature_type == 'custom':
-            if not data.NAME_ID in self.__mainSelf.features.columns:
-                self.__mainSelf.features[data.NAME_ID] = data.DataFrame()[data.NAME_ID]
-
         # Perform feature preprocessing
         preprocessing = FeaturesPreprocessing()
         data = preprocessing.fit_transform(data, features_ids=[self.__mainSelf.features], endpoint2task={self.__mainSelf.endpoint_name:self.__mainSelf.task})
