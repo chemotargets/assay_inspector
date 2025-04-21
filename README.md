@@ -38,6 +38,8 @@ To run `AssayInspector`, you first need to prepare your input data. The file sho
 * `ref`: The reference source name from which each value-molecule annotation was obtained.
 * `endpoint`: The name of the endpoint to analyze.
 
+You can find two example input files for the [half-life] (test_scripts/data_testing/logHL_aggregated_dataset.tsv) and [clearance] (test_scripts/data_testing/logCL_aggregated_dataset.tsv) datasets.
+
 ## Usage
 
 Once the input data file has been prepared, you can run `AssayInspector` in the following way:
