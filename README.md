@@ -20,13 +20,13 @@ Data heterogeneity and distributional misalignments pose critical challenges for
 ## Installation
 
 To install the latest release and use the package, run the following command to download it from GitHub:  
-```
+```bash 
 git clone https://github.com/chemotargets/assay_inspector.git
 cd assay_inspector
 ```
 
 Then, create the environment to run the package as follows: 
-```
+```bash
 conda env create -f AssayInspector_env.yml
 ```
 
@@ -44,7 +44,6 @@ You can find two example input files for the [half-life] (test_scripts/data_test
 
 Once the input data file has been prepared, you can run `AssayInspector` in the following way:
 
-<pre>
 ```python
 from AI_Main import AssayInspector
 
@@ -61,7 +60,6 @@ report = AssayInspector(
 report.get_individual_reporting()
 report.get_comparative_reporting()
 ```
-</pre>
 
 #### AssayInspector arguments
 
