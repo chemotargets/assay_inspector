@@ -36,7 +36,7 @@ To run `AssayInspector`, you first need to prepare your input data. You will nee
 * smiles: The SMILES string representation of each molecule in the dataset.
 * value: The annotated value for each molecule — use a numerical value for regression tasks or a binary label (0 or 1) for classification tasks.
 * ref: The reference source name from which each value-molecule annotation was obtained.
-* endpoint: The name of the endpoint under study.
+* endpoint: The name of the endpoint to analyze.
 
 ## Usage
 
@@ -58,6 +58,24 @@ report = AssayInspector(
 report.get_individual_reporting()
 report.get_comparative_reporting()
 ```
+
+#### AssayInspector arguments
+
+| Argument | Type | Description |
+| --- | --- | --- |
+| `data_path` | `str` | Path to the input dataset file (`.csv` or `.tsv` format). |
+| `endpoint_name` | `str` | Name of the endpoint to analyze. |
+| `task` | `str` | Type of task: either `'regression'` or `'classification'`. |
+| `feature_type` | `str` | Type of features to use: one of `'ecfp4'`, `'rdkit'`, or `'custom'`. |
+| `outliers_method` | `str` | *(Optional)* Method to detect outliers: `'zscore'` (default) or `'iqr'`. |
+| `distance_metric` | `str` | *(Optional)* Distance metric for custom descriptors. Defaults to `'euclidean'`. |
+| `descriptors_df` | `pd.DataFrame` | *(Optional)* DataFrame containing custom molecular descriptors for dataset molecules. |
+| `reference_set` | `str` | *(Optional)* Path to an additional dataset used for comparative analysis. |
+| `lower_bound` | `int` or `float` | *(Optional)* Lower bound to define the endpoint applicability domain. |
+| `upper_bound` | `int` or `float` | *(Optional)* Upper bound to define the endpoint applicability domain. |
+
+> NOTE: When `feature_type='custom'`, the argument `descriptors_df` must be provided.
+
 As a result, a directory named `AssayInspector_DATE` will be created, containing all generated files and plots for each analyzed endpoint.
 
 ## License
