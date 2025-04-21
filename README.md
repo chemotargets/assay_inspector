@@ -6,7 +6,7 @@
 
   ![Python](https://img.shields.io/badge/python-3.9+-blue)
   ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-  
+
 </div>
 
 <div align="center">
@@ -42,7 +42,7 @@ To run `AssayInspector`, you first need to prepare your input data. The file sho
 * `ref`: The reference source name from which each value-molecule annotation was obtained.
 * `endpoint`: The name of the endpoint to analyze.
 
-You can find two example input files for the [half-life] (test_scripts/data_testing/logHL_aggregated_dataset.tsv) and [clearance] (test_scripts/data_testing/logCL_aggregated_dataset.tsv) datasets.
+You can find two example input files for the [half-life](test_scripts/data_testing/logHL_aggregated_dataset.tsv) and [clearance](test_scripts/data_testing/logCL_aggregated_dataset.tsv) datasets.
 
 ## Usage
 
