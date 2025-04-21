@@ -3,8 +3,10 @@
     Data consistency assessment facilitates transfer learning in ADME modeling
   </h1>
   <p><i>AssayInspector: A Python package for diagnostic assessment of data consistency in molecular datasets</i></p>
+
   ![Python](https://img.shields.io/badge/python-3.9+-blue)
   ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+  
 </div>
 
 <div align="center">
