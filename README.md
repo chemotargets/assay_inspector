@@ -16,39 +16,56 @@ Data heterogeneity and distributional misalignments pose critical challenges for
 
 **Keywords:** data reporting, molecular property, ADME, physicochemical, machine learning, data aggregation, predictive accuracy, benchmark
 
-### Usage
-**Download** from GitHub:  
+## Installation
+
+To install the latest release and use the package, run the following command to download it from GitHub:  
 ```
 wget https://github.com/chemotargets/assay_inspector/archive/refs/heads/master.zip
 unzip master.zip
 cd assay_inspector-master/
 ```
 
-**Create Environment**:  
+Then, create the environment to run the package as follows: 
 ```
 conda env create -f AssayInspector_env.yml
 ```
 
-**Perform Analysis**
+## Getting Started
+
+To run `AssayInspector`, you first need to prepare your input data. You will need a TSV or CSV file with the following required columns:
+* smiles: The SMILES string representation of each molecule in the dataset.
+* value: The annotated value for each molecule — use a numerical value for regression tasks or a binary label (0 or 1) for classification tasks.
+* ref: The reference source name from which each value-molecule annotation was obtained.
+* endpoint: The name of the endpoint under study.
+
+## Usage
+
+Once the input data file has been prepared, you can run `AssayInspector` in the following way:
 
 ```
 from AI_Main import AssayInspector
 
+# Prepare AssayInspector report
 report = AssayInspector(
 	data_path='path/to/dataset/file.tsv',
 	endpoint_name='endpoint',
 	task='regression',
 	feature_type='ecfp4,
-	reference_set='path/to/reference_set.tsv'
+	reference_set='path/to/reference_set.tsv' # optional
 )
 
+# Run AssayInspector report
 report.get_individual_reporting()
 report.get_comparative_reporting()
 ```
+As a result, a directory named `AssayInspector_DATE` will be created, containing all generated files and plots for each analyzed endpoint.
 
+## License
+
+`AssayInspector` is licensed under the MIT License. See the [LICENSE](./LICENSE.md) file.
 
 <!--
-#### Citation Note
+## Cite us
 Please cite [our paper](url) if you use *AssayInspector* in your own work:
 
 ```
