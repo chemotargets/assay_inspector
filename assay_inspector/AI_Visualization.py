@@ -802,7 +802,7 @@ class Visualization():
             distance_metric = 'Standardized Euclidean distance'
             xrange = [distance_matrix.min(), distance_matrix.max()]
         elif self.__mainSelf.feature_type in ['ecfp4']:
-            distance_metric = 'Jaccard distance'
+            distance_metric = 'Tanimoto distance'
             xrange = [0, 1]
         elif self.__mainSelf.feature_type in ['custom']:
             distance_metric = f'{self.__mainSelf.distance_metric.capitalize()} distance'
