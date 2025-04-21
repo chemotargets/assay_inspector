@@ -1,3 +1,4 @@
+test_scripts/data_testing/drugs.tsv
 test_scripts/AssayInspector*
 test_scripts/logging.log
 data
