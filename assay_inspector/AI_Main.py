@@ -52,14 +52,14 @@ class AssayInspector():
     ### Define constants
 
     ###
-    def __init__(self, data_path, endpoint_name, task, feature_type, outliers_method='zscore', distance_metric='euclidean', 
+    def __init__(self, data, endpoint_name, task, feature_type, outliers_method='zscore', distance_metric='euclidean', 
                  descriptors_df=None, reference_set=None, lower_bound=None, upper_bound=None):
 
         """
         Class constructor. Requires input data.
         """
 
-        self.data_path = data_path
+        self.data = data
         self.endpoint_name = endpoint_name
         self.task = task.upper()
         self.feature_type = feature_type
@@ -105,10 +105,10 @@ class AssayInspector():
         self.__visualization = Visualization(mainSelf=self)
 
         # Load data
-        if not os.path.exists(self.data_path):
-            logging.error(f"The file {self.data_path} does not exist")
+        if isinstance(self.data, str) and not os.path.exists(self.data):
+            logging.error(f"The file {self.data} does not exist")
             return 
-        data_instance = MoleculeData(source=self.data_path)
+        data_instance = MoleculeData(source=self.data)
 
         # Generate the DataFrame of molecule feature profiles
         data = self.__dataloading.getMoleculeProfileDataframe(data_instance, reporting='individual')
@@ -219,10 +219,10 @@ class AssayInspector():
         self.__insightreport = InsightReport(mainSelf=self)
 
         # Load data
-        if not os.path.exists(self.data_path):
-            logging.error(f"The file {self.data_path} does not exist")
+        if isinstance(self.data, str) and not os.path.exists(self.data):
+            logging.error(f"The file {self.data} does not exist")
             return 
-        data_instance = MoleculeData(source=self.data_path)
+        data_instance = MoleculeData(source=self.data)
 
         # Generate the DataFrame of molecule feature profiles
         data = self.__dataloading.getMoleculeProfileDataframe(data_instance, reporting='comparative')
