@@ -67,7 +67,7 @@ class AssayInspector():
         self.outliers_method = outliers_method
         self.distance_metric = distance_metric
 
-        self.descriptors_df = descriptors_df.copy()
+        self.descriptors_df = descriptors_df.copy() if descriptors_df else None
         self.reference_set = reference_set
 
         self.lower_bound = lower_bound
