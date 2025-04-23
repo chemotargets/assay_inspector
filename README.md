@@ -10,9 +10,7 @@
 </div>
 
 <div align="center">
-	<div style="background-color: white; display: inline-block; padding: 10px; border-radius: 10px; width:60vw">
-		<img src="https://github.com/chemotargets/assay_inspector/blob/master/AssayInspector.png?raw=true" alt="AssayInspector">
-	</div>
+  <img src="AssayInspector.svg" alt="AssayInspector" width="60%">
 </div>
 
 &nbsp;
