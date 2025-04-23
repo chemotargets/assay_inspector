@@ -10,7 +10,7 @@
 </div>
 
 <div align="center">
-  <img src="AssayInspector.svg" alt="AssayInspector" width="60%">
+  <img src="AssayInspector.svg" alt="AssayInspector" width="80%">
 </div>
 
 &nbsp;
