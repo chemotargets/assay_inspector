@@ -74,7 +74,9 @@ def standardize(originalMol):
         # Fragment the structure and select the biggest non metalic fragment
         rdfr = rdMolStandardize.LargestFragmentChooser(preferOrganic=True)
         biggestNonMetalMol = rdfr.choose(noMetalsMol)
-        normalizedMol = Chem.MolFromSmiles(Chem.MolToSmiles(rdMolStandardize.Normalize(biggestNonMetalMol)), sanitize=True)
+        rdu = rdMolStandardize.Uncharger()
+        unchargedMol = rdu.uncharge(biggestNonMetalMol)
+        normalizedMol = Chem.MolFromSmiles(Chem.MolToSmiles(rdMolStandardize.Normalize(unchargedMol)), sanitize=True)
 
     return normalizedMol
 
