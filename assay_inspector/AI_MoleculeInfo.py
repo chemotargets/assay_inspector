@@ -137,17 +137,20 @@ class MoleculeInfo():
         if not feature in self.AVAILABLE_FEATURES:
             logging.error(f"Feature {feature} not available, choose one from {list(self.AVAILABLE_FEATURES.keys())}")
             return
-        if feature == self.FEAT_ECFP4:
-            feature_vals = AllChem.GetMorganFingerprintAsBitVect(self.mol, radius=self.ECFP4_radius, nBits=self.ECFP4_nBits).ToList()
-        elif feature == self.FEAT_RDKIT_DESC:
-            # TODO: filter self.AVAILABLE_FEATURES[feature] checking if others have already computed them
-            calc = MoleculeDescriptors.MolecularDescriptorCalculator(self.AVAILABLE_FEATURES[feature])
-            feature_vals = calc.CalcDescriptors(self.mol)
-        # elif feature == self.FEAT_MORDRED_DESC:
-        #     calc = mordred_calculator(mordred_descriptors, ignore_3D=False)(self.mol)
-        #     feature_vals = calc.values()
+        if self.molObj is None:
+            feature_vals = [None]*len(self.AVAILABLE_FEATURES[feature])
         else:
-            logging.error(f"Feature {feature} not available, choose one from {list(self.features.keys())}")
+            if feature == self.FEAT_ECFP4:
+                feature_vals = AllChem.GetMorganFingerprintAsBitVect(self.mol, radius=self.ECFP4_radius, nBits=self.ECFP4_nBits).ToList()
+            elif feature == self.FEAT_RDKIT_DESC:
+                # TODO: filter self.AVAILABLE_FEATURES[feature] checking if others have already computed them
+                calc = MoleculeDescriptors.MolecularDescriptorCalculator(self.AVAILABLE_FEATURES[feature])
+                feature_vals = calc.CalcDescriptors(self.mol)
+            # elif feature == self.FEAT_MORDRED_DESC:
+            #     calc = mordred_calculator(mordred_descriptors, ignore_3D=False)(self.mol)
+            #     feature_vals = calc.values()
+            else:
+                logging.error(f"Feature {feature} not available, choose one from {list(self.features.keys())}")
 
         feature_dict = dict(zip(self.AVAILABLE_FEATURES[feature], feature_vals))
 
