@@ -1,0 +1,187 @@
+Metadata-Version: 2.4
+Name: assay_inspector
+Version: 1.0.4
+Summary: AssayInspector: A Python package for diagnostic assessment of data consistency in molecular datasets.
+Author-email: Raquel Parrondo-Pizarro <raquel.parrondo@chemotargets.com>, Luca Menestrina <luca.menestrina@chemotargets.com>
+Maintainer-email: Raquel Parrondo-Pizarro <raquel.parrondo@chemotargets.com>, Luca Menestrina <luca.menestrina@chemotargets.com>
+License: MIT License
+        
+        Copyright (c) 2025 Chemotargets
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/chemotargets/assay_inspector
+Project-URL: Documentation, https://github.com/chemotargets/assay_inspector
+Project-URL: Repository, https://github.com/chemotargets/assay_inspector
+Keywords: data reporting,molecular property,ADME,physicochemical,machine learning,data aggregation,predictive accuracy,benchmark
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas>=2.2.3
+Requires-Dist: numpy>=2.0.2
+Requires-Dist: scipy>=1.13.1
+Requires-Dist: scikit-learn>=1.4.2
+Requires-Dist: umap-learn>=0.5.6
+Requires-Dist: rdkit>=2024.09.4
+Requires-Dist: ray[default]>=2.43.0
+Requires-Dist: plotly>=6.0.0
+Requires-Dist: matplotlib>=3.9.4
+Requires-Dist: seaborn>=0.13.2
+Requires-Dist: matplotlib-venn>=1.1.2
+Requires-Dist: upsetplot>=0.9.0
+Requires-Dist: cloudpickle>=3.1.1
+Requires-Dist: tqdm>=4.67.1
+Requires-Dist: psutil>=6.1.1
+Requires-Dist: pycairo>=1.27.0
+Requires-Dist: requests>=2.32.3
+Requires-Dist: pyyaml>=6.0.2
+Requires-Dist: typing-extensions>=4.12.2
+Dynamic: license-file
+
+<div align="center">
+  <h1>
+    Data consistency assessment facilitates transfer learning in ADME modeling
+  </h1>
+  <p><i>AssayInspector: A Python package for diagnostic assessment of data consistency in molecular datasets</i></p>
+
+  ![Python](https://img.shields.io/badge/python-3.9+-blue)
+  ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+  ![PyPI - Version](https://img.shields.io/pypi/v/assay_inspector)
+
+</div>
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/chemotargets/assay_inspector/master/AssayInspector.svg" alt="AssayInspector" width="80%">
+</div>
+
+&nbsp;
+
+Data heterogeneity and distributional misalignments pose critical challenges for machine learning models, often compromising predictive accuracy. These challenges are exemplified in preclinical safety modeling, a crucial step in early-stage drug discovery where limited data and experimental constraints exacerbate integration issues. Analyzing public ADME datasets, we uncovered significant misalignments between benchmark and gold-standard sources that degrade model performance. Our analyses further revealed that dataset discrepancies arise from differences in various factors, from experimental conditions in data collection to chemical space coverage. This highlights the importance of **rigorous data consistency assessment (DCA) prior to modeling**. To facilitate a systematic DCA across diverse datasets, we developed **AssayInspector**, a **model-agnostic package** that leverages *statistics*, *visualizations*, and *diagnostic summaries* to identify *outliers*, *batch effects*, and *discrepancies*. Beyond preclinical safety, DCA can play a crucial role in federated learning scenarios, enabling effective transfer learning across heterogeneous data sources and supporting reliable integration across diverse scientific domains.
+
+**Keywords:** data reporting, molecular property, ADME, physicochemical, machine learning, data aggregation, predictive accuracy, benchmark
+
+## Installation
+
+To install and use the package, first create the `conda` environment as follows:
+```bash 
+conda env create -f AssayInspector_env.yml
+```
+
+Then, activate the environment:
+```bash
+conda activate assay_inspector
+```
+
+Finally, install the package from PyPI using pip:
+```bash
+pip install assay_inspector
+```
+
+
+## Getting Started
+
+To run `AssayInspector`, you first need to prepare your input data. The file should be in `.tsv` or `.csv` format and include the following required columns:
+* `smiles`: The SMILES string representation of each molecule in the dataset.
+* `value`: The annotated value for each molecule — use a numerical value for regression tasks or a binary label (0 or 1) for classification tasks.
+* `ref`: The reference source name from which each value-molecule annotation was obtained.
+* `endpoint`: The name of the endpoint to analyze.
+
+You can find two example input files for the half-life and clearance datasets.
+
+## Usage
+
+Once the input data file has been prepared, you can run `AssayInspector` in the following way:
+
+```python
+from assay_inspector import AssayInspector
+
+# Prepare AssayInspector report
+report = AssayInspector(
+	data_path='path/to/dataset/file.tsv',
+	endpoint_name='endpoint',
+	task='regression',
+	feature_type='ecfp4',
+	reference_set='path/to/reference_set.tsv' # optional
+)
+
+# Run AssayInspector report
+report.get_individual_reporting()
+report.get_comparative_reporting()
+```
+
+#### AssayInspector arguments
+
+| Argument | Type | Description |
+| --- | --- | --- |
+| `data_path` | `str` | Path to the input dataset file (`.csv` or `.tsv` format). |
+| `endpoint_name` | `str` | Name of the endpoint to analyze. |
+| `task` | `str` | Type of task: either `'regression'` or `'classification'`. |
+| `feature_type` | `str` | Type of features to use: one of `'ecfp4'`, `'rdkit'`, or `'custom'`. |
+| `outliers_method` | `str` | *(Optional)* Method to detect outliers: `'zscore'` *(default)* or `'iqr'`. |
+| `distance_metric` | `str` | *(Optional)* Distance metric for custom descriptors: `'euclidean'` *(default)*. |
+| `descriptors_df` | `pd.DataFrame` | *(Optional)* DataFrame containing molecular descriptors for dataset molecules (required when `feature_type='custom'`). |
+| `reference_set` | `str` | *(Optional)* Path to an additional dataset used for comparative analysis. |
+| `lower_bound` | `int` or `float` | *(Optional)* Lower bound to define the endpoint applicability domain. |
+| `upper_bound` | `int` or `float` | *(Optional)* Upper bound to define the endpoint applicability domain. |
+
+The resulting output will be saved in a folder named `AssayInspector_YYYYMMDD`, which will contain:
+- A tabular file that summarizes key descriptive parameters for each data source.
+- A comprehensive set of visualization plots that facilitate the detection of inconsistencies across data sources.
+- An insight report containing multiple alerts and recommendations to guide data cleaning and preprocessing.
+
+## Examples
+
+Below are a few sample outputs generated by `AssayInspector`.
+
+| Endpoint | Outlier Visualization | Endpoint Distribution Comparative Visualization |
+|-------------------------------|-------------------------------|----------------------------|
+| Half-life | ![Outlier Visualization](https://raw.githubusercontent.com/chemotargets/assay_inspector/refs/heads/pypi/examples/1_outlier_visualization_logHL.svg) | ![Endpoint Distribution Comparative Visualization](https://raw.githubusercontent.com/chemotargets/assay_inspector/refs/heads/pypi/examples/3_2_endpoint_distribution_comparative_visualization_violinplots_logHL.svg) |
+| Clearance | ![Outlier Visualization](https://raw.githubusercontent.com/chemotargets/assay_inspector/refs/heads/pypi/examples/1_outlier_visualization_logCL.svg) | ![Endpoint Distribution Comparative Visualization](https://raw.githubusercontent.com/chemotargets/assay_inspector/refs/heads/pypi/examples/3_2_endpoint_distribution_comparative_visualization_violinplots_logCL.svg) |
+
+## License
+
+`AssayInspector` is licensed under the MIT License. See the [LICENSE](https://github.com/chemotargets/assay_inspector/blob/pypi/LICENSE) file.
+
+<!--
+## Cite us
+Please cite [our paper](url) if you use *AssayInspector* in your own work:
+
+```
+@article {TAG,
+         title = {Data consistency assessment facilitates transfer learning in ADME modeling},
+         author = {Parrondo-Pizarro, Raquel and Menestrina, Luca and Garcia-Serna, Ricard and Fernández-Torras, Adrià and Mestres, Jordi},
+         journal = {Journal},
+         volume = {Vol},
+         year = {Year},
+         doi = {doi},
+         URL = {url},
+         publisher = {Publisher},
+}
+```
+-->
