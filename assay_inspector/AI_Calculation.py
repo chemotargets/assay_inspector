@@ -23,7 +23,7 @@ from umap import UMAP
 from sklearn.preprocessing import MinMaxScaler
 from itertools import combinations
 
-from AI_MoleculeInfo import MoleculeInfo
+from .AI_MoleculeInfo import MoleculeInfo
 
 ### Configs
 import os

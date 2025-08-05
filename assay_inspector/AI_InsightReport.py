@@ -13,7 +13,7 @@ __deprecated__ = False
 import pandas as pd
 import numpy as np
 
-from AI_Utils import classify_skewness, formatWarningTitle
+from .AI_Utils import classify_skewness, formatWarningTitle
 
 ### Configs
 import os
