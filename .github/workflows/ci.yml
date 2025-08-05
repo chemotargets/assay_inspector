@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest setuptools wheel build twine pandas numpy scipy scikit-learn umap-learn rdkit ray[default] plotly matplotlib-base seaborn matplotlib-venn upsetplot cloudpickle tqdm psutil pycairo requests pyyaml typing-extensions
+          pip install pytest setuptools wheel build twine pandas numpy scipy scikit-learn umap-learn rdkit ray[default] plotly matplotlib seaborn matplotlib-venn upsetplot cloudpickle tqdm psutil pycairo requests pyyaml typing-extensions
 
       - name: Run tests
         run: pytest
