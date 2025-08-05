@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "assay_inspector"
+version = "1.0.0"
+description = "AssayInspector: A Python package for diagnostic assessment of data consistency in molecular datasets."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Raquel Parrondo-Pizarro", email = "raquel.parrondo@chemotargets.com"},
+    {name = "Luca Menestrina", email = "luca.menestrina@chemotargets.com"}
+]
+maintainers = [
+    {name = "Raquel Parrondo-Pizarro", email = "raquel.parrondo@chemotargets.com"},
+    {name = "Luca Menestrina", email = "luca.menestrina@chemotargets.com"}
+]
+keywords = [
+    "data reporting", "molecular property", "ADME", "physicochemical",
+    "machine learning", "data aggregation", "predictive accuracy", "benchmark"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas>=2.2.3",
+    "numpy>=2.0.2",
+    "scipy>=1.13.1",
+    "scikit-learn>=1.4.2",
+    "umap-learn>=0.5.6",
+    "rdkit>=2024.09.4",
+    "ray[default]>=2.43.0",
+    "plotly>=6.0.0",
+    "matplotlib>=3.9.4",
+    "seaborn>=0.13.2",
+    "matplotlib-venn>=1.1.2",
+    "upsetplot>=0.9.0",
+    "cloudpickle>=3.1.1",
+    "tqdm>=4.67.1",
+    "psutil>=6.1.1",
+    "pycairo>=1.27.0",
+    "requests>=2.32.3",
+    "pyyaml>=6.0.2",
+    "typing-extensions>=4.12.2"
+]
+
+[project.scripts]
+AssayInspector = "assay_inspector.AI_Main:main"
+
+[project.urls]
+Homepage = "https://github.com/chemotargets/assay_inspector"
+Documentation = "https://github.com/chemotargets/assay_inspector"
+Repository = "https://github.com/chemotargets/assay_inspector"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["assay_inspector*"]
+
+[tool.setuptools.package-data]
+"assay_inspector" = ["configs.json"]
