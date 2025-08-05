@@ -11,16 +11,16 @@ __deprecated__ = False
 
 ### Imports
 
-from AI_DataLoading import DataLoading
-from AI_Calculation import Calculation
-from AI_OutputFile import OutputFile
-from AI_Visualization import Visualization
-from AI_InsightReport import InsightReport
+from .AI_DataLoading import DataLoading
+from .AI_Calculation import Calculation
+from .AI_OutputFile import OutputFile
+from .AI_Visualization import Visualization
+from .AI_InsightReport import InsightReport
 
-from AI_MoleculeData import MoleculeData
-from AI_MoleculeInfo import MoleculeInfo
+from .AI_MoleculeData import MoleculeData
+from .AI_MoleculeInfo import MoleculeInfo
 
-from AI_Utils import logging
+from .AI_Utils import logging
 
 import pandas as pd
 import seaborn as sns
@@ -374,3 +374,42 @@ class AssayInspector():
     @columns.setter
     def columns(self, value):
         self.__columns = value
+
+
+###
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="AssayInspector: A Python package for diagnostic assessment of data consistency in molecular datasets.")
+    parser.add_argument('--data', required=True, help="Path to the input dataset file (.csv or .tsv format).")
+    parser.add_argument('--endpoint-name', required=True, help="Name of the endpoint to analyze.")
+    parser.add_argument('--task', required=True, choices=['regression', 'classification'], help="Type of task: either 'regression' or 'classification'.")
+    parser.add_argument('--feature-type', required=True, choices=['ecfp4', 'rdkit', 'custom'], help="Type of features to use: one of 'ecfp4', 'rdkit', or 'custom'.")
+    parser.add_argument('--outliers-method', default='zscore', choices=['zscore', 'iqr'], help="(Optional) Method to detect outliers: 'zscore' (default) or 'iqr'.")
+    parser.add_argument('--distance-metric', default='euclidean', help="(Optional) Distance metric for custom descriptors: 'euclidean' (default).")
+    parser.add_argument('--reference-set', help="(Optional) Path to an additional dataset used for comparative analysis.")
+    parser.add_argument('--lower-bound', type=float, help="(Optional) Lower bound to define the endpoint applicability domain.")
+    parser.add_argument('--upper-bound', type=float, help="(Optional) Upper bound to define the endpoint applicability domain.")
+    
+    args = parser.parse_args()
+
+    # Prepare AssayInspector report
+    report = AssayInspector(
+        data=args.data,
+        endpoint_name=args.endpoint_name,
+        task=args.task,
+        feature_type=args.feature_type,
+        outliers_method=args.outliers_method,
+        distance_metric=args.distance_metric,
+        reference_set=args.reference_set,
+        lower_bound=args.lower_bound,
+        upper_bound=args.upper_bound
+    )
+    
+    # Run AssayInspector report based on user input
+    if args.task.lower() == 'comparative':
+        report.get_comparative_reporting()
+    else:
+        report.get_individual_reporting()
+
+if __name__ == "__main__":
+    main()
