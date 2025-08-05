@@ -6,11 +6,12 @@
 
   ![Python](https://img.shields.io/badge/python-3.9+-blue)
   ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+  ![PyPI - Version](https://img.shields.io/pypi/v/assay_inspector)
 
 </div>
 
 <div align="center">
-  <img src="AssayInspector.svg" alt="AssayInspector" width="80%">
+  <img src="https://raw.githubusercontent.com/chemotargets/assay_inspector/master/AssayInspector.svg" alt="AssayInspector" width="80%">
 </div>
 
 &nbsp;
@@ -21,16 +22,21 @@ Data heterogeneity and distributional misalignments pose critical challenges for
 
 ## Installation
 
-To install the latest release and use the package, run the following command to download it from GitHub:  
+To install and use the package, first create the `conda` environment as follows:
 ```bash 
-git clone https://github.com/chemotargets/assay_inspector.git
-cd assay_inspector
-```
-
-Then, create the environment to run the package as follows: 
-```bash
 conda env create -f AssayInspector_env.yml
 ```
+
+Then, activate the environment:
+```bash
+conda activate assay_inspector
+```
+
+Finally, install the package from PyPI using pip:
+```bash
+pip install assay_inspector
+```
+
 
 ## Getting Started
 
