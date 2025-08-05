@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "assay_inspector"
-version = "1.0.0"
+version = "1.0.4"
 description = "AssayInspector: A Python package for diagnostic assessment of data consistency in molecular datasets."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -17,6 +17,8 @@ maintainers = [
     {name = "Raquel Parrondo-Pizarro", email = "raquel.parrondo@chemotargets.com"},
     {name = "Luca Menestrina", email = "luca.menestrina@chemotargets.com"}
 ]
+author = "Raquel Parrondo-Pizarro <raquel.parrondo@chemotargets.com>, Luca Menestrina <luca.menestrina@chemotargets.com>"  # For PyPI web display compatibility
+maintainer = "Raquel Parrondo-Pizarro <raquel.parrondo@chemotargets.com>, Luca Menestrina <luca.menestrina@chemotargets.com>"  # For PyPI web display compatibility
 keywords = [
     "data reporting", "molecular property", "ADME", "physicochemical",
     "machine learning", "data aggregation", "predictive accuracy", "benchmark"
