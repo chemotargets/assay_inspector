@@ -20,3 +20,8 @@ assay_inspector.egg-info/dependency_links.txt
 assay_inspector.egg-info/entry_points.txt
 assay_inspector.egg-info/requires.txt
 assay_inspector.egg-info/top_level.txt
+tests/test_calculations.py
+tests/test_data_loading.py
+tests/test_features_preprocessing.py
+tests/test_molecule_info.py
+tests/test_utils.py
