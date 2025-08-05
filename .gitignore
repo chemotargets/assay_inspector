@@ -7,3 +7,5 @@ results_scaled
 __pycache__
 tmp
 .ipynb_checkpoints
+*.log
+*.pyc
