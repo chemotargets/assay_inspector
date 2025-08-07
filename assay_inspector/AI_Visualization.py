@@ -30,7 +30,7 @@ import seaborn as sns
 from matplotlib_venn import venn2, venn3
 from upsetplot import UpSet, from_contents
 
-from AI_Utils import logging
+from .AI_Utils import logging
 
 ### Configs
 import os

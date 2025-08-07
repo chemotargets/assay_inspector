@@ -1,0 +1,2 @@
+[console_scripts]
+AssayInspector = assay_inspector.AI_Main:main

@@ -16,8 +16,8 @@ import numpy as np
 from tqdm import tqdm
 from copy import deepcopy
 
-from AI_Utils import parallel_apply, ray_manager, logging, molFromSmiles, standardize
-from AI_MoleculeInfo import MoleculeInfo
+from .AI_Utils import parallel_apply, ray_manager, logging, molFromSmiles, standardize
+from .AI_MoleculeInfo import MoleculeInfo
 
 N_CPUS = 24  # TODO: move to configs
 TASK_REGRESSION = "REGRESSION"  # TODO: move to configs

@@ -14,7 +14,7 @@ __deprecated__ = False
 import pandas as pd
 import os
 
-from AI_Utils import logging, classify_skewness
+from .AI_Utils import logging, classify_skewness
 
 ### Configs
 import os
